@@ -6,22 +6,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: Arial, sans-serif; background: #0d1117; color: #fff; margin: 0; padding: 20px; }
-    .login, .panel { max-width: 500px; margin: auto; background: #161b22; padding: 20px; border-radius: 10px; }
-    input, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
-    button { background: #238636; color: #fff; font-weight: bold; cursor: pointer; }
+    .login, .panel { max-width: 500px; margin: auto; background: #161b22; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+    input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box; }
+    input { background: #0d1117; color: #fff; border: 1px solid #30363d; }
+    button { background: #238636; color: #fff; font-weight: bold; cursor: pointer; font-size: 16px; }
     button:hover { background: #2ea043; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 10px; border: 1px solid #30363d; text-align: center; }
+    th, td { padding: 12px; border: 1px solid #30363d; text-align: center; }
     th { background: #21262d; }
-    .logout { background: #da3633; }
+    .action-btn { padding: 6px 12px; margin: 0 4px; font-size: 14px; }
+    .edit-btn { background: #396cd8; }
+    .delete-btn { background: #da3633; }
+    .logout { background: #da3633; margin-top: 30px; }
+    .logout:hover { background: #f85149; }
   </style>
 </head>
 <body>
 
 <div class="login" id="loginBox">
   <h2>Admin Login</h2>
-  <input id="adminUser" type="text" placeholder="Admin Username">
-  <input id="adminKey" type="password" placeholder="Admin Key">
+  <input id="adminUser" type="text" placeholder="Admin Username" autocomplete="username">
+  <input id="adminKey" type="password" placeholder="Admin Key" autocomplete="current-password">
   <button onclick="adminLogin()">Login</button>
 </div>
 
@@ -34,7 +39,12 @@
 
   <table>
     <thead>
-      <tr><th>User</th><th>Key</th><th>Expiry</th><th>Actions</th></tr>
+      <tr>
+        <th>User</th>
+        <th>Key</th>
+        <th>Expiry</th>
+        <th>Actions</th>
+      </tr>
     </thead>
     <tbody id="userTable"></tbody>
   </table>
@@ -43,46 +53,68 @@
 </div>
 
 <script>
-const SERVER_URL = "https://proxyweb-pgev.onrender.com"
-let loggedIn = false;
+const SERVER_URL = "https://proxyweb-pgev.onrender.com"; // Make sure this is correct and server is running
 
 async function adminLogin() {
   const username = document.getElementById("adminUser").value.trim();
   const accessKey = document.getElementById("adminKey").value.trim();
 
-  const res = await fetch("${SERVER_URL}/admin/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, accessKey })
-  });
+  if (!username || !accessKey) {
+    return alert("Please enter both username and key");
+  }
 
-  if (res.ok) {
-    loggedIn = true;
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("panelBox").style.display = "block";
-    loadUsers();
-  } else {
-    alert("Invalid admin credentials");
+  try {
+    const res = await fetch(`${SERVER_URL}/admin/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, accessKey })
+    });
+
+    if (res.ok) {
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("panelBox").style.display = "block";
+      loadUsers();
+    } else {
+      const error = await res.text();
+      alert("Login failed: " + (error || "Invalid credentials"));
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Connection error: Is the server running?\nCheck console (F12) for details.");
   }
 }
 
 async function loadUsers() {
-  const res = await fetch("${SERVER_URL}/admin/users");
-  const users = await res.json();
-  const table = document.getElementById("userTable");
-  table.innerHTML = "";
-  users.forEach(u => {
-    const row = `<tr>
-      <td>${u.username}</td>
-      <td>${u.accessKey}</td>
-      <td>${new Date(u.expiry).toLocaleString()}</td>
-      <td>
-        <button onclick="editUser('${u.username}')">Edit</button>
-        <button onclick="deleteUser('${u.username}')">Delete</button>
-      </td>
-    </tr>`;
-    table.innerHTML += row;
-  });
+  try {
+    const res = await fetch(`${SERVER_URL}/admin/users`);
+    if (!res.ok) throw new Error("Failed to load users");
+    
+    const users = await res.json();
+    const table = document.getElementById("userTable");
+    table.innerHTML = "";
+
+    if (users.length === 0) {
+      table.innerHTML = "<tr><td colspan='4'>No users found</td></tr>";
+      return;
+    }
+
+    users.forEach(u => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${escapeHtml(u.username)}</td>
+        <td>${escapeHtml(u.accessKey)}</td>
+        <td>${new Date(u.expiry).toLocaleString()}</td>
+        <td>
+          <button class="action-btn edit-btn" onclick="editUser('${escapeHtml(u.username)}')">Edit</button>
+          <button class="action-btn delete-btn" onclick="deleteUser('${escapeHtml(u.username)}')">Delete</button>
+        </td>
+      `;
+      table.appendChild(row);
+    });
+  } catch (err) {
+    console.error(err);
+    alert("Failed to load users. Check server status.");
+  }
 }
 
 async function addKey() {
@@ -90,48 +122,97 @@ async function addKey() {
   const accessKey = document.getElementById("newKey").value.trim();
   const expiryDate = document.getElementById("newExpiry").value;
 
-  if (!username || !accessKey || !expiryDate) return alert("Fill all fields");
+  if (!username || !accessKey || !expiryDate) {
+    return alert("Please fill all fields");
+  }
 
-  const expiry = new Date(expiryDate + "T23:59:59.000Z").toISOString();
+  const expiry = new Date(expiryDate + "T23:59:59.999Z").toISOString();
 
-  await fetch("${SERVER_URL}/admin/add", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, accessKey, expiry })
-  });
-  loadUsers();
+  try {
+    const res = await fetch(`${SERVER_URL}/admin/add`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, accessKey, expiry })
+    });
+
+    if (res.ok) {
+      alert("User added successfully!");
+      document.getElementById("newUser").value = "";
+      document.getElementById("newKey").value = "";
+      document.getElementById("newExpiry").value = "";
+      loadUsers();
+    } else {
+      const error = await res.text();
+      alert("Failed to add user: " + error);
+    }
+  } catch (err) {
+    alert("Connection error");
+  }
 }
 
 async function editUser(username) {
-  const newKey = prompt("Enter new key:");
-  const newExpiryDate = prompt("Enter new expiry (YYYY-MM-DD):");
+  const newKey = prompt("Enter new access key (leave blank to keep current):");
+  const newExpiryDate = prompt("Enter new expiry date (YYYY-MM-DD, leave blank to keep current):");
 
-  let newExpiry = null;
-  if (newExpiryDate) {
-    newExpiry = new Date(newExpiryDate + "T23:59:59.000Z").toISOString();
+  if (newKey === null && newExpiryDate === null) return; // cancelled
+
+  const body = { username };
+  if (newKey !== null && newKey.trim() !== "") body.accessKey = newKey.trim();
+  if (newExpiryDate !== null && newExpiryDate.trim() !== "") {
+    body.expiry = new Date(newExpiryDate.trim() + "T23:59:59.999Z").toISOString();
   }
 
-  await fetch("${SERVER_URL}/admin/edit", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, accessKey: newKey, expiry: newExpiry })
-  });
-  loadUsers();
+  try {
+    const res = await fetch(`${SERVER_URL}/admin/edit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    if (res.ok) {
+      alert("User updated!");
+      loadUsers();
+    } else {
+      alert("Update failed");
+    }
+  } catch (err) {
+    alert("Connection error");
+  }
 }
 
 async function deleteUser(username) {
-  await fetch("${SERVER_URL}/admin/delete", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username })
-  });
-  loadUsers();
+  if (!confirm(`Delete user "${username}"? This cannot be undone.`)) return;
+
+  try {
+    const res = await fetch(`${SERVER_URL}/admin/delete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username })
+    });
+
+    if (res.ok) {
+      alert("User deleted");
+      loadUsers();
+    } else {
+      alert("Delete failed");
+    }
+  } catch (err) {
+    alert("Connection error");
+  }
 }
 
 function logout() {
-  loggedIn = false;
   document.getElementById("panelBox").style.display = "none";
   document.getElementById("loginBox").style.display = "block";
+  document.getElementById("adminUser").value = "";
+  document.getElementById("adminKey").value = "";
+}
+
+// Simple HTML escape to prevent XSS when injecting usernames
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 </script>
 
