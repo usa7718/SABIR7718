@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; background: #0d1117; color: #fff; margin: 0; padding: 20px; }
+    .login, .panel { max-width: 500px; margin: auto; background: #161b22; padding: 20px; border-radius: 10px; }
+    input, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
+    button { background: #238636; color: #fff; font-weight: bold; cursor: pointer; }
+    button:hover { background: #2ea043; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; border: 1px solid #30363d; text-align: center; }
+    th { background: #21262d; }
+    .logout { background: #da3633; }
+  </style>
+</head>
+<body>
+
+<div class="login" id="loginBox">
+  <h2>Admin Login</h2>
+  <input id="adminUser" type="text" placeholder="Admin Username">
+  <input id="adminKey" type="password" placeholder="Admin Key">
+  <button onclick="adminLogin()">Login</button>
+</div>
+
+<div class="panel" id="panelBox" style="display:none;">
+  <h2>Manage Users</h2>
+  <input id="newUser" type="text" placeholder="Username">
+  <input id="newKey" type="text" placeholder="Access Key">
+  <input id="newExpiry" type="date">
+  <button onclick="addKey()">Add User</button>
+
+  <table>
+    <thead>
+      <tr><th>User</th><th>Key</th><th>Expiry</th><th>Actions</th></tr>
+    </thead>
+    <tbody id="userTable"></tbody>
+  </table>
+
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<script>
+const SERVER_URL = "https://proxyweb-pgev.onrender.com"
+let loggedIn = false;
+
+async function adminLogin() {
+  const username = document.getElementById("adminUser").value.trim();
+  const accessKey = document.getElementById("adminKey").value.trim();
+
+  const res = await fetch("${SERVER_URL}/admin/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, accessKey })
+  });
+
+  if (res.ok) {
+    loggedIn = true;
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("panelBox").style.display = "block";
+    loadUsers();
+  } else {
+    alert("Invalid admin credentials");
+  }
+}
+
+async function loadUsers() {
+  const res = await fetch("${SERVER_URL}/admin/users");
+  const users = await res.json();
+  const table = document.getElementById("userTable");
+  table.innerHTML = "";
+  users.forEach(u => {
+    const row = `<tr>
+      <td>${u.username}</td>
+      <td>${u.accessKey}</td>
+      <td>${new Date(u.expiry).toLocaleString()}</td>
+      <td>
+        <button onclick="editUser('${u.username}')">Edit</button>
+        <button onclick="deleteUser('${u.username}')">Delete</button>
+      </td>
+    </tr>`;
+    table.innerHTML += row;
+  });
+}
+
+async function addKey() {
+  const username = document.getElementById("newUser").value.trim();
+  const accessKey = document.getElementById("newKey").value.trim();
+  const expiryDate = document.getElementById("newExpiry").value;
+
+  if (!username || !accessKey || !expiryDate) return alert("Fill all fields");
+
+  const expiry = new Date(expiryDate + "T23:59:59.000Z").toISOString();
+
+  await fetch("${SERVER_URL}/admin/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, accessKey, expiry })
+  });
+  loadUsers();
+}
+
+async function editUser(username) {
+  const newKey = prompt("Enter new key:");
+  const newExpiryDate = prompt("Enter new expiry (YYYY-MM-DD):");
+
+  let newExpiry = null;
+  if (newExpiryDate) {
+    newExpiry = new Date(newExpiryDate + "T23:59:59.000Z").toISOString();
+  }
+
+  await fetch("${SERVER_URL}/admin/edit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, accessKey: newKey, expiry: newExpiry })
+  });
+  loadUsers();
+}
+
+async function deleteUser(username) {
+  await fetch("${SERVER_URL}/admin/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username })
+  });
+  loadUsers();
+}
+
+function logout() {
+  loggedIn = false;
+  document.getElementById("panelBox").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
+}
+</script>
+
+</body>
+</html>
