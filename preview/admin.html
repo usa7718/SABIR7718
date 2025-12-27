@@ -1,220 +1,346 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial, sans-serif; background: #0d1117; color: #fff; margin: 0; padding: 20px; }
-    .login, .panel { max-width: 500px; margin: auto; background: #161b22; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-    input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box; }
-    input { background: #0d1117; color: #fff; border: 1px solid #30363d; }
-    button { background: #238636; color: #fff; font-weight: bold; cursor: pointer; font-size: 16px; }
-    button:hover { background: #2ea043; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 12px; border: 1px solid #30363d; text-align: center; }
-    th { background: #21262d; }
-    .action-btn { padding: 6px 12px; margin: 0 4px; font-size: 14px; }
-    .edit-btn { background: #396cd8; }
-    .delete-btn { background: #da3633; }
-    .logout { background: #da3633; margin-top: 30px; }
-    .logout:hover { background: #f85149; }
-  </style>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* ---------- GLOBAL ---------- */
+:root{
+  --bg:#0d1117; --box:#161b22; --border:#30363d;
+  --text:#fff; --accent:#238636; --accent-hover:#2ea043;
+  --danger:#da3633; --danger-hover:#f85149;
+  --primary:#0969da; --primary-hover:#1f6feb;
+  --muted:#8b949e;
+}
+body{
+  margin:0;
+  font-family:Inter, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  display:flex; flex-direction:column; gap:25px;
+  padding:15px;
+}
+.box{
+  max-width:1000px;
+  margin:auto;
+  background:var(--box);
+  padding:25px;
+  border-radius:12px;
+  border:1px solid var(--border);
+}
+h1,h2,h3{margin:0 0 15px}
+
+/* ---------- INPUTS ---------- */
+input,button,select{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border:none;
+  border-radius:6px;
+  background:#21262d;
+  color:var(--text);
+}
+input:focus{outline:2px solid var(--primary);}
+
+/* ---------- BUTTONS ---------- */
+.btn{
+  cursor:pointer;
+  transition:0.15s;
+  font-weight:600;
+}
+.btn:hover{transform:translateY(-1px);}
+.btn.primary{background:var(--primary);}
+.btn.primary:hover{background:var(--primary-hover);}
+.btn.success{background:var(--accent);}
+.btn.success:hover{background:var(--accent-hover);}
+.btn.danger{background:var(--danger);}
+.btn.danger:hover{background:var(--danger-hover);}
+.btn.small{padding:6px 10px; font-size:13px; width:auto; margin:2px}
+
+/* ---------- TABLES ---------- */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+  font-size:14px;
+}
+th,td{
+  padding:12px;
+  border-bottom:1px solid var(--border);
+  text-align:center;
+}
+th{background:#1c2229;}
+tr:hover td{background:#21262d;}
+
+/* ---------- TABS ---------- */
+.nav{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+}
+.nav button{
+  flex:1;
+  max-width:200px;
+}
+
+/* ---------- MODAL CONFIRM ---------- */
+#confirmBox{
+  position:fixed; inset:0;
+  display:none;
+  background:#000a;
+  align-items:center; justify-content:center;
+}
+#confirmBox .inner{
+  background:var(--box);
+  padding:25px;
+  border-radius:10px;
+  width:300px;
+  text-align:center;
+}
+</style>
 </head>
 <body>
 
-<div class="login" id="loginBox">
-  <h2>Admin Login</h2>
-  <input id="adminUser" type="text" placeholder="Admin Username" autocomplete="username">
-  <input id="adminKey" type="password" placeholder="Admin Key" autocomplete="current-password">
-  <button onclick="adminLogin()">Login</button>
+
+<div class="box" id="loginBox">
+  <h2>🔐 Admin Login</h2>
+  <input id="adminUser" placeholder="Admin Username">
+  <input id="adminKey" type="password" placeholder="Admin Key">
+  <button class="btn primary" onclick="adminLogin()">Login</button>
 </div>
 
-<div class="panel" id="panelBox" style="display:none;">
-  <h2>Manage Users</h2>
-  <input id="newUser" type="text" placeholder="Username">
-  <input id="newKey" type="text" placeholder="Access Key">
-  <input id="newExpiry" type="date">
-  <button onclick="addKey()">Add User</button>
+<div class="box" id="panelBox" style="display:none;">
+  <h2>⚙️ Admin Dashboard</h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>User</th>
-        <th>Key</th>
-        <th>Expiry</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="userTable"></tbody>
-  </table>
+  <div class="nav">
+    <button class="btn primary" onclick="showUsers()">Users</button>
+    <button class="btn primary" onclick="showResellers()">Resellers</button>
+  </div>
 
-  <button class="logout" onclick="logout()">Logout</button>
+  <!-- USERS -->
+  <div id="usersPanel">
+    <h3>Add User</h3>
+    <input id="newUser" placeholder="Username">
+    <input id="newKey" placeholder="Access Key">
+    <input id="newExpiry" type="date">
+    <input id="newDeviceLimit" placeholder="Device limit (number/unlimited)">
+
+    <button class="btn success" onclick="addUser()">Add User</button>
+    <button class="btn primary" onclick="loadUsers()">Refresh</button>
+
+    <table>
+      <thead>
+        <tr>
+  <th>User</th>
+  <th>Key</th>
+  <th>Expiry</th>
+  <th>Limit</th>
+  <th>Used</th>
+  <th>Devices</th>
+  <th>Actions</th>
+</tr>
+      </thead>
+      <tbody id="userTable"></tbody>
+    </table>
+
+    <br>
+    <button class="btn danger" onclick="restartServer()">Restart Server</button>
+    <button class="btn danger" onclick="clearAllUsers()">Clear All Users ❗</button>
+    <button class="btn" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- RESELLERS -->
+  <div id="resellerPanel" style="display:none;">
+    <h3>Add Reseller</h3>
+    <input id="rUser" placeholder="Reseller Username">
+<input id="rKey" placeholder="Reseller Key">
+<input id="rExp" type="date">
+
+<button class="btn success" onclick="addReseller()">Add Reseller</button>
+<button class="btn primary" onclick="loadResellers()">Refresh</button>
+
+<table>
+  <thead>
+    <tr><th>User</th><th>Key</th><th>Expiry</th><th>Actions</th></tr>
+  </thead>
+  <tbody id="rsTable"></tbody>
+</table>
+  </div>
+</div>
+
+<!-- Confirm Box -->
+<div id="confirmBox">
+  <div class="inner">
+    <p id="confirmMsg"></p>
+    <button class="btn success" onclick="confirmAction(true)">OK</button>
+    <button class="btn danger" onclick="confirmAction(false)">Cancel</button>
+  </div>
 </div>
 
 <script>
-const SERVER_URL = "https://proxyweb-pgev.onrender.com"; // Make sure this is correct and server is running
+ const API = "https://proxyweb-pgev.onrender.com"
 
-async function adminLogin() {
-  const username = document.getElementById("adminUser").value.trim();
-  const accessKey = document.getElementById("adminKey").value.trim();
+//const API = "http://localhost:8888"
 
-  if (!username || !accessKey) {
-    return alert("Please enter both username and key");
-  }
+async function loadResellers(){
+  const res = await fetch(`${API}/admin/reseller/list`);
+  const list = await res.json();
+  rsTable.innerHTML="";
 
-  try {
-    const res = await fetch(`${SERVER_URL}/admin/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, accessKey })
-    });
+  list.forEach(r=>{
+    const exp=new Date(r.expiry).toLocaleDateString();
+    rsTable.innerHTML+=`
+    <tr>
+      <td>${r.username}</td>
+      <td>${r.accessKey}</td>
+      <td>${exp}</td>
+      <td>
+        <button class="btn small primary" onclick="editReseller('${r.username}')">Edit</button>
+        <button class="btn small danger" onclick="deleteReseller('${r.username}')">Delete</button>
+      </td>
+    </tr>`;
+  });
+}
+async function addReseller(){
+  const username=rUser.value.trim();
+  const accessKey=rKey.value.trim();
+  const expiry=new Date(rExp.value+"T23:59:59Z").toISOString();
 
-    if (res.ok) {
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("panelBox").style.display = "block";
-      loadUsers();
-    } else {
-      const error = await res.text();
-      alert("Login failed: " + (error || "Invalid credentials"));
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Connection error: Is the server running?\nCheck console (F12) for details.");
-  }
+  await fetch(`${API}/admin/reseller/add`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username,accessKey,expiry})
+  });
+
+  loadResellers();
+}
+/* ---------- UI SWITCH ---------- */
+function showUsers(){usersPanel.style.display="block";resellerPanel.style.display="none";}
+function showResellers(){usersPanel.style.display="none";resellerPanel.style.display="block";}
+
+/* ---------- SIMPLE CONFIRM DIALOG ---------- */
+let confirmResolve;
+function ask(msg){confirmMsg.textContent=msg;confirmBox.style.display="flex";return new Promise(r=>confirmResolve=r);}
+function confirmAction(v){confirmBox.style.display="none";confirmResolve(v);}
+
+/* ---------- LOGIN ---------- */
+async function adminLogin(){
+  const username = adminUser.value.trim();
+  const accessKey = adminKey.value.trim();
+  const res = await fetch(`${API}/admin/login`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username,accessKey})
+  });
+
+  if(res.ok){
+    loginBox.style.display="none";
+    panelBox.style.display="block";
+    loadUsers();
+  } else alert("Invalid login");
 }
 
-async function loadUsers() {
-  try {
-    const res = await fetch(`${SERVER_URL}/admin/users`);
-    if (!res.ok) throw new Error("Failed to load users");
-    
-    const users = await res.json();
-    const table = document.getElementById("userTable");
-    table.innerHTML = "";
+/* ---------- LOAD USERS ---------- */
+async function loadUsers(){
+  const res = await fetch(`${API}/admin/users`);
+  const data = await res.json();
+  userTable.innerHTML="";
 
-    if (users.length === 0) {
-      table.innerHTML = "<tr><td colspan='4'>No users found</td></tr>";
-      return;
-    }
+  data.forEach(u=>{
+    const expiry = new Date(u.expiry).toLocaleDateString();
 
-    users.forEach(u => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${escapeHtml(u.username)}</td>
-        <td>${escapeHtml(u.accessKey)}</td>
-        <td>${new Date(u.expiry).toLocaleString()}</td>
-        <td>
-          <button class="action-btn edit-btn" onclick="editUser('${escapeHtml(u.username)}')">Edit</button>
-          <button class="action-btn delete-btn" onclick="deleteUser('${escapeHtml(u.username)}')">Delete</button>
-        </td>
-      `;
-      table.appendChild(row);
-    });
-  } catch (err) {
-    console.error(err);
-    alert("Failed to load users. Check server status.");
-  }
+    // filter invalid device entries
+    const cleanDevices = (u.devicesUsed || []).filter(d => d && typeof d === "string");
+
+    // short display hashes
+    const usedList = cleanDevices.length
+      ? cleanDevices.map(d => `<span title="${d}">${d.slice(0,8)}...${d.slice(-8)}</span>`).join("<br>")
+      : "—";
+
+    userTable.innerHTML += `
+    <tr>
+      <td>${u.username}</td>
+      <td>${u.accessKey}</td>
+      <td>${expiry}</td>
+      <td>${u.devicesAllowed}</td>
+      <td>${cleanDevices.length}</td>         <!-- 👈 new device count -->
+      <td style="font-size:12px">${usedList}</td>
+      <td>
+        <button class="btn small primary" onclick="editUser('${u.username}')">Edit</button>
+        <button class="btn small danger" onclick="deleteUser('${u.username}')">Delete</button>
+        <button class="btn small" onclick="clearUser('${u.username}')">Clear</button>
+      </td>
+    </tr>`;
+  });
 }
 
-async function addKey() {
-  const username = document.getElementById("newUser").value.trim();
-  const accessKey = document.getElementById("newKey").value.trim();
-  const expiryDate = document.getElementById("newExpiry").value;
+/* ---------- ADD ---------- */
+async function addUser(){
+  const username = newUser.value.trim();
+  const accessKey = newKey.value.trim();
+  const expiryDate = newExpiry.value.trim();
+  const devicesAllowed = newDeviceLimit.value.trim();
 
-  if (!username || !accessKey || !expiryDate) {
-    return alert("Please fill all fields");
-  }
+  if(!username || !accessKey || !expiryDate || !devicesAllowed)
+    return alert("⚠ Fill all fields");
 
-  const expiry = new Date(expiryDate + "T23:59:59.999Z").toISOString();
+  const expiry = new Date(expiryDate+"T23:59:59Z").toISOString();
 
-  try {
-    const res = await fetch(`${SERVER_URL}/admin/add`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, accessKey, expiry })
-    });
+  await fetch(`${API}/admin/add`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ username, accessKey, expiry, devicesAllowed })
+  });
 
-    if (res.ok) {
-      alert("User added successfully!");
-      document.getElementById("newUser").value = "";
-      document.getElementById("newKey").value = "";
-      document.getElementById("newExpiry").value = "";
-      loadUsers();
-    } else {
-      const error = await res.text();
-      alert("Failed to add user: " + error);
-    }
-  } catch (err) {
-    alert("Connection error");
-  }
+  await loadUsers(); // 👈 table refresh wait karega
+  alert(`✔ User "${username}" added`);
 }
 
-async function editUser(username) {
-  const newKey = prompt("Enter new access key (leave blank to keep current):");
-  const newExpiryDate = prompt("Enter new expiry date (YYYY-MM-DD, leave blank to keep current):");
+/* ---------- EDIT ---------- */
+async function editUser(username){
+  const k=prompt("New key?"),d=prompt("New expiry (YYYY-MM-DD)?"),l=prompt("New device limit?");
+  const expiry=d?new Date(d+"T23:59:59Z").toISOString():null;
 
-  if (newKey === null && newExpiryDate === null) return; // cancelled
-
-  const body = { username };
-  if (newKey !== null && newKey.trim() !== "") body.accessKey = newKey.trim();
-  if (newExpiryDate !== null && newExpiryDate.trim() !== "") {
-    body.expiry = new Date(newExpiryDate.trim() + "T23:59:59.999Z").toISOString();
-  }
-
-  try {
-    const res = await fetch(`${SERVER_URL}/admin/edit`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-
-    if (res.ok) {
-      alert("User updated!");
-      loadUsers();
-    } else {
-      alert("Update failed");
-    }
-  } catch (err) {
-    alert("Connection error");
-  }
+  await fetch(`${API}/admin/edit`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username,accessKey:k,expiry,devicesAllowed:l})
+  });
+  loadUsers();
 }
 
-async function deleteUser(username) {
-  if (!confirm(`Delete user "${username}"? This cannot be undone.`)) return;
-
-  try {
-    const res = await fetch(`${SERVER_URL}/admin/delete`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username })
-    });
-
-    if (res.ok) {
-      alert("User deleted");
-      loadUsers();
-    } else {
-      alert("Delete failed");
-    }
-  } catch (err) {
-    alert("Connection error");
-  }
+/* ---------- DELETE ---------- */
+async function deleteUser(username){
+  if(!(await ask(`Delete ${username}?`)))return;
+  await fetch(`${API}/admin/delete`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username})});
+  loadUsers();
 }
 
-function logout() {
-  document.getElementById("panelBox").style.display = "none";
-  document.getElementById("loginBox").style.display = "block";
-  document.getElementById("adminUser").value = "";
-  document.getElementById("adminKey").value = "";
+/* ---------- CLEAR USER ---------- */
+async function clearUser(username){
+  if(!(await ask(`Clear devices for ${username}?`)))return;
+  await fetch(`${API}/admin/clear`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username})});
+  loadUsers();
 }
 
-// Simple HTML escape to prevent XSS when injecting usernames
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+/* ---------- CLEAR ALL ---------- */
+async function clearAllUsers(){
+  if(!(await ask("⚠ CLEAR ALL USERS?")))return;
+  await fetch(`${API}/admin/clearall`,{method:"POST"});
+  loadUsers();
 }
+
+/* ---------- RESTART ---------- */
+async function restartServer(){
+  if(!(await ask("⚠ Restart the server?")))return;
+  await fetch(`${API}/admin/restart`,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username:"SABIR7718",accessKey:"SABANA"})
+  });
+  alert("Server restarting...");
+}
+
+/* ---------- LOGOUT ---------- */
+function logout(){panelBox.style.display="none";loginBox.style.display="block";}
 </script>
-
 </body>
 </html>
