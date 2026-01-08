@@ -126,21 +126,18 @@ tr:hover td{background:#21262d;}
     <input id="newKey" placeholder="Access Key">
     <input id="newExpiry" type="date">
     <input id="newDeviceLimit" placeholder="Device limit (number/unlimited)">
+    <select id="newPlatform">
+  <option value="both">Both (Web + APK)</option>
+  <option value="web">Web Only</option>
+  <option value="apk">APK Only</option>
+</select>
 
     <button class="btn success" onclick="addUser()">Add User</button>
     <button class="btn primary" onclick="loadUsers()">Refresh</button>
 
     <table>
       <thead>
-        <tr>
-  <th>User</th>
-  <th>Key</th>
-  <th>Expiry</th>
-  <th>Limit</th>
-  <th>Used</th>
-  <th>Devices</th>
-  <th>Actions</th>
-</tr>
+        <tr><th>User</th><th>Key</th><th>Expiry</th><th>Limit</th><th>Platform</th><th>Created By</th><th>Devices</th><th>Actions</th></tr>
       </thead>
       <tbody id="userTable"></tbody>
     </table>
@@ -157,6 +154,11 @@ tr:hover td{background:#21262d;}
     <input id="rUser" placeholder="Reseller Username">
 <input id="rKey" placeholder="Reseller Key">
 <input id="rExp" type="date">
+<select id="rPlatform">
+  <option value="both">Both (Web + APK)</option>
+  <option value="web">Web Only</option>
+  <option value="apk">APK Only</option>
+</select>
 
 <button class="btn success" onclick="addReseller()">Add Reseller</button>
 <button class="btn primary" onclick="loadResellers()">Refresh</button>
@@ -180,167 +182,401 @@ tr:hover td{background:#21262d;}
 </div>
 
 <script>
- const API = "https://proxyweb-pgev.onrender.com"
 
-//const API = "http://localhost:8888"
+async function getDeviceCode() {
+  const saved = localStorage.getItem("deviceCode");
+  if (saved && saved.length === 64) return saved;
 
-async function loadResellers(){
-  const res = await fetch(`${API}/admin/reseller/list`);
-  const list = await res.json();
-  rsTable.innerHTML="";
+  const safe = v =>
+    v !== undefined && v !== null && v !== "" ? v : "0";
 
-  list.forEach(r=>{
-    const exp=new Date(r.expiry).toLocaleDateString();
-    rsTable.innerHTML+=`
-    <tr>
-      <td>${r.username}</td>
-      <td>${r.accessKey}</td>
-      <td>${exp}</td>
-      <td>
-        <button class="btn small primary" onclick="editReseller('${r.username}')">Edit</button>
-        <button class="btn small danger" onclick="deleteReseller('${r.username}')">Delete</button>
-      </td>
-    </tr>`;
-  });
+  const parts = [
+    safe(navigator.userAgent),
+    safe(navigator.language),
+    safe(screen.width),
+    safe(screen.height),
+    safe(screen.colorDepth),
+    safe(navigator.hardwareConcurrency),
+    safe(navigator.deviceMemory),
+    safe(Intl.DateTimeFormat().resolvedOptions().timeZone),
+    safe(new Date().getTimezoneOffset())
+  ].join("|");
+
+  const encoded = new TextEncoder().encode(parts);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+
+  const dc = [...new Uint8Array(hashBuffer)]
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  localStorage.setItem("deviceCode", dc);
+  return dc;
 }
-async function addReseller(){
-  const username=rUser.value.trim();
-  const accessKey=rKey.value.trim();
-  const expiry=new Date(rExp.value+"T23:59:59Z").toISOString();
 
-  await fetch(`${API}/admin/reseller/add`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({username,accessKey,expiry})
-  });
+/* ---------- CONFIG ---------- */
+const API = "https://proxyweb-pgev.onrender.com";
+//const API = "https://473ad2cd0a8b.ngrok-free.app";
 
-  loadResellers();
-}
 /* ---------- UI SWITCH ---------- */
-function showUsers(){usersPanel.style.display="block";resellerPanel.style.display="none";}
-function showResellers(){usersPanel.style.display="none";resellerPanel.style.display="block";}
+function showUsers() {
+  usersPanel.style.display = "block";
+  resellerPanel.style.display = "none";
+}
+function showResellers() {
+  usersPanel.style.display = "none";
+  resellerPanel.style.display = "block";
+}
 
 /* ---------- SIMPLE CONFIRM DIALOG ---------- */
 let confirmResolve;
-function ask(msg){confirmMsg.textContent=msg;confirmBox.style.display="flex";return new Promise(r=>confirmResolve=r);}
-function confirmAction(v){confirmBox.style.display="none";confirmResolve(v);}
+function ask(msg) {
+  confirmMsg.textContent = msg;
+  confirmBox.style.display = "flex";
+  return new Promise(r => confirmResolve = r);
+}
+function confirmAction(v) {
+  confirmBox.style.display = "none";
+  confirmResolve(v);
+}
 
 /* ---------- LOGIN ---------- */
-async function adminLogin(){
+async function adminLogin() {
   const username = adminUser.value.trim();
   const accessKey = adminKey.value.trim();
-  const res = await fetch(`${API}/admin/login`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({username,accessKey})
+  const deviceCode = await getDeviceCode();
+
+  const res = await fetch(`${API}/admin/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, accessKey, deviceCode })
   });
 
-  if(res.ok){
-    loginBox.style.display="none";
-    panelBox.style.display="block";
+  if (res.ok) {
+    loginBox.style.display = "none";
+    panelBox.style.display = "block";
     loadUsers();
-  } else alert("Invalid login");
+  } else {
+    alert("Invalid login");
+  }
 }
 
 /* ---------- LOAD USERS ---------- */
-async function loadUsers(){
-  const res = await fetch(`${API}/admin/users`);
-  const data = await res.json();
-  userTable.innerHTML="";
+async function loadUsers() {
+  const username = adminUser.value.trim();
+  const accessKey = adminKey.value.trim();
+  const deviceCode = await getDeviceCode();
 
-  data.forEach(u=>{
+  const res = await fetch(`${API}/admin/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username,
+      accessKey,
+      deviceCode
+    })
+  });
+
+  if (!res.ok) {
+    alert("Unauthorized / session expired");
+    return;
+  }
+
+  const data = await res.json();
+  userTable.innerHTML = "";
+
+  data.forEach(u => {
+  const createdBy = u.createdBy ? u.createdBy : "admin";
+  const usedCount = (u.devicesUsed || []).length;
+const limit = u.devicesAllowed === "unlimited"
+  ? "∞"
+  : u.devicesAllowed;
     const expiry = new Date(u.expiry).toLocaleDateString();
 
-    // filter invalid device entries
-    const cleanDevices = (u.devicesUsed || []).filter(d => d && typeof d === "string");
-
-    // short display hashes
-    const usedList = cleanDevices.length
-      ? cleanDevices.map(d => `<span title="${d}">${d.slice(0,8)}...${d.slice(-8)}</span>`).join("<br>")
+    const usedList = (u.devicesUsed || []).length
+      ? (u.devicesUsed || [])
+          .map(d => `<span title="${d}">${d.slice(0, 8)}...${d.slice(-8)}</span>`)
+          .join("<br>")
       : "—";
 
     userTable.innerHTML += `
-    <tr>
-      <td>${u.username}</td>
-      <td>${u.accessKey}</td>
-      <td>${expiry}</td>
-      <td>${u.devicesAllowed}</td>
-      <td>${cleanDevices.length}</td>         <!-- 👈 new device count -->
-      <td style="font-size:12px">${usedList}</td>
-      <td>
-        <button class="btn small primary" onclick="editUser('${u.username}')">Edit</button>
-        <button class="btn small danger" onclick="deleteUser('${u.username}')">Delete</button>
-        <button class="btn small" onclick="clearUser('${u.username}')">Clear</button>
-      </td>
-    </tr>`;
+      <tr>
+        <td>${u.username}</td>
+        <td>${u.accessKey}</td>
+        <td>${expiry}</td>
+        <td>${limit}/${usedCount}</td>
+        <td>${u.platform || "both"}</td>
+        <td>${createdBy}</td>
+        <td style="font-size:12px">${usedList}</td>
+        <td>
+          <button class="btn small primary"
+  onclick="editUser('${u.username}','${u.accessKey}')">Edit</button>
+          <button onclick="deleteUser('${u.username}','${u.accessKey}')">Delete</button>
+          <button class="btn small" onclick="clearUser('${u.username}')">Clear</button>
+        </td>
+      </tr>`;
   });
 }
 
-/* ---------- ADD ---------- */
-async function addUser(){
-  const username = newUser.value.trim();
-  const accessKey = newKey.value.trim();
+/* ---------- ADD USER ---------- */
+async function addUser() {
+  const u = newUser.value.trim();
+  const k = newKey.value.trim();
   const expiryDate = newExpiry.value.trim();
   const devicesAllowed = newDeviceLimit.value.trim();
 
-  if(!username || !accessKey || !expiryDate || !devicesAllowed)
+  if (!u || !k || !expiryDate || !devicesAllowed)
     return alert("⚠ Fill all fields");
 
-  const expiry = new Date(expiryDate+"T23:59:59Z").toISOString();
+  const expiry = new Date(`${expiryDate}T23:59:59Z`).toISOString();
+  const deviceCode = await getDeviceCode();
+  const platform = document.getElementById("newPlatform").value;
 
-  await fetch(`${API}/admin/add`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ username, accessKey, expiry, devicesAllowed })
+  await fetch(`${API}/admin/add`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      adminUser: adminUser.value,
+      adminKey: adminKey.value,
+      deviceCode,
+      username: u,
+      accessKey: k,
+      expiry,
+      devicesAllowed,
+      platform
+    })
   });
 
-  await loadUsers(); // 👈 table refresh wait karega
-  alert(`✔ User "${username}" added`);
+  await loadUsers();
+  alert(`✔ User "${u}" added`);
 }
 
-/* ---------- EDIT ---------- */
-async function editUser(username){
-  const k=prompt("New key?"),d=prompt("New expiry (YYYY-MM-DD)?"),l=prompt("New device limit?");
-  const expiry=d?new Date(d+"T23:59:59Z").toISOString():null;
+/* ---------- EDIT USER ---------- */
+async function editUser(targetUser, targetKey) {
+  const newKey = prompt("New key?");
+  const d = prompt("New expiry (YYYY-MM-DD)?");
+  const newDeviceLimit = prompt("New device limit?");
+  const expiry = d ? new Date(`${d}T23:59:59Z`).toISOString() : null;
 
-  await fetch(`${API}/admin/edit`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({username,accessKey:k,expiry,devicesAllowed:l})
+  const deviceCode = await getDeviceCode();
+
+  await fetch(`${API}/admin/edit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+  adminUser: adminUser.value,
+  adminKey: adminKey.value,
+  deviceCode,
+  targetUser,
+  targetKey,
+  newKey,
+  newExpiry: expiry,
+  newDeviceLimit
+})
   });
+
   loadUsers();
 }
 
-/* ---------- DELETE ---------- */
-async function deleteUser(username){
-  if(!(await ask(`Delete ${username}?`)))return;
-  await fetch(`${API}/admin/delete`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username})});
-  loadUsers();
-}
+/* ---------- DELETE USER ---------- */
+async function deleteUser(username, accessKey) {
+  if (!(await ask(`Delete ${username}?`))) return;
 
-/* ---------- CLEAR USER ---------- */
-async function clearUser(username){
-  if(!(await ask(`Clear devices for ${username}?`)))return;
-  await fetch(`${API}/admin/clear`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username})});
-  loadUsers();
-}
-
-/* ---------- CLEAR ALL ---------- */
-async function clearAllUsers(){
-  if(!(await ask("⚠ CLEAR ALL USERS?")))return;
-  await fetch(`${API}/admin/clearall`,{method:"POST"});
-  loadUsers();
-}
-
-/* ---------- RESTART ---------- */
-async function restartServer(){
-  if(!(await ask("⚠ Restart the server?")))return;
-  await fetch(`${API}/admin/restart`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({username:"SABIR7718",accessKey:"SABANA"})
+  await fetch(`${API}/admin/delete`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      adminUser: adminUser.value,
+      adminKey: adminKey.value,
+      deviceCode: await getDeviceCode(),
+      username,
+      accessKey
+    })
   });
+
+  loadUsers();
+}
+
+/* ---------- CLEAR USER DEVICES ---------- */
+async function clearUser(targetUser) {
+  if (!(await ask(`Clear devices for ${targetUser}?`))) return;
+
+  await fetch(`${API}/admin/clear`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      adminUser: adminUser.value,
+      adminKey: adminKey.value,
+      deviceCode: await getDeviceCode(),
+      username: targetUser
+    })
+  });
+
+  loadUsers();
+}
+
+/* ---------- CLEAR ALL USERS ---------- */
+async function clearAllUsers() {
+  if (!(await ask("⚠ CLEAR ALL USERS?"))) return;
+
+  await fetch(`${API}/admin/clearall`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      adminUser: adminUser.value,
+      adminKey: adminKey.value,
+      deviceCode: await getDeviceCode()
+    })
+  });
+
+  loadUsers();
+}
+
+/* ---------- RESTART SERVER ---------- */
+async function restartServer() {
+  if (!(await ask("⚠ Restart the server?"))) return;
+
+  await fetch(`${API}/admin/restart`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    username: adminUser.value,
+    accessKey: adminKey.value,
+    deviceCode: await getDeviceCode()
+  })
+});
+
   alert("Server restarting...");
 }
 
 /* ---------- LOGOUT ---------- */
-function logout(){panelBox.style.display="none";loginBox.style.display="block";}
+function logout() {
+  panelBox.style.display = "none";
+  loginBox.style.display = "block";
+}
+
+/* ---------- RESELLERS ---------- */
+async function loadResellers() {
+
+  const res = await fetch(`${API}/admin/reseller/list`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      adminUser: adminUser.value.trim(),
+      adminKey: adminKey.value.trim(),
+      deviceCode: await getDeviceCode()
+    })
+  });
+
+  if (!res.ok) {
+    alert("❌ Unauthorized (admin auth failed)");
+    return;
+  }
+
+  const list = await res.json();
+  rsTable.innerHTML = "";
+
+  list.forEach(r => {
+    const exp = new Date(r.expiry).toLocaleDateString();
+
+    rsTable.innerHTML += `
+      <tr>
+        <td>${r.username}</td>
+        <td>${r.accessKey}</td>
+        <td>${exp}</td>
+        <td>
+          <button class="btn small primary"
+            onclick="editReseller('${r.username}','${r.accessKey}')">
+            Edit
+          </button>
+          <button class="btn small danger"
+            onclick="deleteReseller('${r.username}','${r.accessKey}')">
+            Delete
+          </button>
+        </td>
+      </tr>`;
+  });
+}
+
+async function deleteReseller(username, accessKey) {
+  if (!confirm(`Delete reseller ${username}?`)) return;
+
+  await fetch(`${API}/admin/reseller/delete`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      adminUser: adminUser.value,
+      adminKey: adminKey.value,
+      deviceCode: await getDeviceCode(),
+      username,
+      accessKey
+    })
+  });
+
+  loadResellers();
+}
+
+async function editReseller(targetUser, targetKey) {
+  const newKey = prompt("New reseller key?");
+  const d = prompt("New expiry (YYYY-MM-DD)?");
+  const newExpiry = d
+    ? new Date(`${d}T23:59:59Z`).toISOString()
+    : null;
+
+  const deviceCode = await getDeviceCode();
+
+  await fetch(`${API}/admin/reseller/edit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      adminUser: adminUser.value,
+      adminKey: adminKey.value,
+      deviceCode,
+      targetUser,
+      targetKey,
+      newKey,
+      newExpiry
+    })
+  });
+
+  loadResellers();
+}
+
+async function addReseller() {
+  const username = rUser.value.trim();
+  const accessKey = rKey.value.trim();
+  const expiryDate = rExp.value;
+  const platform = document.getElementById("rPlatform").value;
+
+  if (!username || !accessKey || !expiryDate) {
+    return alert("⚠ Fill all reseller fields");
+  }
+
+  const expiry = new Date(`${expiryDate}T23:59:59Z`).toISOString();
+  const deviceCode = await getDeviceCode();
+
+  const res = await fetch(`${API}/admin/reseller/add`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      adminUser: adminUser.value.trim(),
+      adminKey: adminKey.value.trim(),
+      deviceCode,
+      username,
+      accessKey,
+      expiry,
+      platform
+    })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    return alert(data.message || "❌ Failed to add reseller");
+  }
+
+  alert(`✅ Reseller "${username}" added`);
+  loadResellers();
+}
 </script>
 </body>
 </html>
