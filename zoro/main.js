@@ -1,4 +1,4 @@
-// test
+
 const fs = require('fs');
 const path = require('path');
 
@@ -819,7 +819,7 @@ async function handleYtButton(sock, message) {
 
 
 
-async function handleYtAudio(sock, chatId, message, query) {
+/*async function handleYtAudio(sock, chatId, message, query) {
     try {
         const search = await yts(query);
         const video = search.videos[0]; 
@@ -850,6 +850,57 @@ async function handleYtAudio(sock, chatId, message, query) {
         const YT_SY_LOVES_API = "https://yt-downloader-api-s7.onrender.com";
         const MY_HEART_SY_KEY = "S7LOVESY";
         const apiUrl = `${YT_SY_LOVES_API}/audio?url=${encodeURIComponent(url)}&key=${MY_HEART_SY_KEY}`;
+
+        await sock.sendMessage(chatId, {
+            audio: { url: apiUrl },
+            mimetype: 'audio/mpeg',
+            fileName: `${title}.mp3`,
+            contextInfo: {
+                externalAdReply: {
+                    title: title,
+                    body: "✅ Successful, 𝒁𝑶𝑹𝑶 𝒙 𝑺7",
+                    thumbnailUrl: video.thumbnail,
+                    sourceUrl: "https://sabir7718.is-a.dev", 
+                    mediaType: 1
+                }
+            }
+        }, { quoted: message });
+
+    } catch (err) {
+        console.error("Play Command Error:", err);
+        await sock.sendMessage(chatId, { text: "❌ Error: The API is not responding or the search failed." });
+    }
+}*/
+
+async function handleYtAudio(sock, chatId, message, query) {
+    try {
+        const search = await yts(query);
+        const video = search.videos[0]; 
+
+        if (!video) {
+            return await sock.sendMessage(chatId, { text: "❌ Sorry, I did not find that song!" });
+        }
+
+        const title = video.title;
+        const url = video.url;
+        const duration = video.timestamp;
+        const author = video.author.name;
+
+        await sock.sendMessage(chatId, { 
+            text: `🎵 *Found:* ${title}\n⏱️ *Duration:* ${duration}\n📺 *Channel:* ${author}\n\n> 𝒁𝑶𝑹𝑶 𝑺7 Engine is downloading your audio...`,
+            contextInfo: {
+                externalAdReply: {
+                    title: "𝒁𝑶𝑹𝑶 𝑨𝑼𝑫𝑰𝑶 𝑷𝑳𝑨𝒀𝑬𝑹",
+                    body: "Join our Channel for Updates!",
+                    mediaType: 1,
+                    thumbnailUrl: video.thumbnail,
+                    sourceUrl: "https://sabir7718.is-a.dev",
+                    renderLargerThumbnail: true
+                }
+            }
+        }, { quoted: message });
+
+        const apiUrl = `https://api.yupra.my.id/api/downloader/ytmp3?url=${encodeURIComponent(url)}`;
 
         await sock.sendMessage(chatId, {
             audio: { url: apiUrl },
