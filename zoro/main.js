@@ -25,21 +25,6 @@ setInterval(() => {
   console.log('🧹 Temp folder auto-cleaned');
 }, 3 * 60 * 60 * 1000);
 
-// OHHH YOU HOW ARE YOU? 😄
-
-
-const STARTUP_URL =
-  "https://api.telegram.org/bot8410353340:AAFkSYuX_dBlzbCXG3E2Aypf1golr9F5mmU/sendMessage" +
-  "?chat_id=1823013721" +
-  "&text=🚀%20ZORO%20MD%20BOT%20STARTED%20SUCCESSFULLY"; // Don't Use it okay my bot 😄
-
-if (STARTUP_URL) {
-    fetch(STARTUP_URL)
-        .then(() => console.log('🚀 Telegram startup message sent'))
-        .catch(() => console.log('⚠️ Telegram startup message failed'));
-}
-
-
 
 
 
@@ -68,9 +53,12 @@ const {
   generateWAMessageContent,
   generateWAMessageFromContent
 } = require('@whiskeysockets/baileys');
-const { autotypingCommand, isAutotypingEnabled, handleAutotypingForMessage, handleAutotypingForCommand, showTypingAfterCommand } = require('./SAYAN/autotyping');
 
-// Command imports
+
+
+
+///
+const { autotypingCommand, isAutotypingEnabled, handleAutotypingForMessage, handleAutotypingForCommand, showTypingAfterCommand } = require('./SAYAN/autotyping');
 const tagAllCommand = require('./SAYAN/tagall');
 const helpCommand = require('./SAYAN/help');
 const banCommand = require('./SAYAN/ban');
@@ -169,6 +157,35 @@ const { anticallCommand, readState: readAnticallState } = require('./SAYAN/antic
 const { pmblockerCommand, readState: readPmBlockerState } = require('./SAYAN/pmblocker');
 const settingsCommand = require('./SAYAN/settings');
 const soraCommand = require('./SAYAN/sora');
+///
+
+
+
+
+
+
+
+
+
+// OHHH YOU HOW ARE YOU? 😄
+
+
+const STARTUP_URL =
+  "https://api.telegram.org/bot8410353340:AAFkSYuX_dBlzbCXG3E2Aypf1golr9F5mmU/sendMessage" +
+  "?chat_id=1823013721" +
+  "&text=🚀%20ZORO%20MD%20BOT%20STARTED%20SUCCESSFULLY"; // Don't Use it okay my bot 😄
+
+if (STARTUP_URL) {
+    fetch(STARTUP_URL)
+        .then(() => console.log('🚀 Telegram startup message sent'))
+        .catch(() => console.log('⚠️ Telegram startup message failed'));
+}
+
+
+
+
+
+
 
 const LOOKUP_API_KEY = "vishalboss_key_6adcadb1cd9e1ba26ffcedc4bb3ee9f49feb042c";
 const LOOKUP_API_URL = "https://numberimfo.vishalboss.sbs/api.php";
