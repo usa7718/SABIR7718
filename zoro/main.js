@@ -298,24 +298,59 @@ const PORN_API_KEY = "e3b8bf3774msh41048d550fcf529p1e8ad9jsn16483b93062f";
 const PORN_API_HOST = "porn-pictures-api.p.rapidapi.com";
 const PORN_API_BASE = "https://porn-pictures-api.p.rapidapi.com";
 
-
 async function fetchRandomFemalePornstar() {
-    const page = Math.floor(Math.random() * 50) + 1;
+    try {
+        const metaRes = await axios.get(
+            `${PORN_API_BASE}/pornstars/female/1`,
+            {
+                headers: {
+                    "X-RapidAPI-Key": PORN_API_KEY,
+                    "X-RapidAPI-Host": PORN_API_HOST,
+                    "User-Agent": "Mozilla/5.0"
+                },
+                timeout: 15000
+            }
+        );
 
-    const url = `${PORN_API_BASE}/pornstars/female/${page}`;
+        const totalPages =
+            metaRes.data?.pagination?.total_pages || 1;
 
-    const res = await axios.get(url, {
-        headers: {
-            "x-rapidapi-key": PORN_API_KEY,
-            "x-rapidapi-host": PORN_API_HOST
-        },
-        timeout: 15000
-    });
+        const page = Math.floor(Math.random() * totalPages) + 1;
 
-    const list = res.data?.result || [];
-    if (!list.length) return null;
+        const res = await axios.get(
+            `${PORN_API_BASE}/pornstars/female/${page}`,
+            {
+                headers: {
+                    "X-RapidAPI-Key": PORN_API_KEY,
+                    "X-RapidAPI-Host": PORN_API_HOST,
+                    "User-Agent": "Mozilla/5.0"
+                },
+                timeout: 15000
+            }
+        );
 
-    return list[Math.floor(Math.random() * list.length)];
+        const list = res.data?.result;
+
+        if (!Array.isArray(list) || list.length === 0) {
+            return null;
+        }
+
+        return list[Math.floor(Math.random() * list.length)];
+
+    } catch (err) {
+        if (err.response) {
+            console.error(
+                "API ERROR:",
+                err.response.status,
+                err.response.data
+            );
+        } else if (err.code === "ECONNABORTED") {
+            console.error("⏱ Timeout error");
+        } else {
+            console.error("❌ Unknown error:", err.message);
+        }
+        return null;
+    }
 }
 
 
@@ -847,7 +882,7 @@ async function handleYtButton(sock, message) {
                     body: "ZORO x S7 Engine Processing...",
                     mediaType: 1,
                     thumbnailUrl: "https://i.top4top.io/p_3664firq70.jpg",
-                    sourceUrl: "https://whatsapp.com/channel/0029VbBNGI36buMJeLm3Su3P",
+                    sourceUrl: "https://sabir7718.is-a.dev",
                     renderLargerThumbnail: true
                 }
             }
@@ -870,7 +905,6 @@ async function handleYtButton(sock, message) {
         await sock.sendMessage(message.key.remoteJid, { text: "❌ Error downloading video." }, { quoted: message });
     }
 }
-
 
 
 
@@ -909,8 +943,19 @@ async function handleYtAudio(sock, chatId, message, query) {
         const MY_HEART_SY_KEY = "S7LOVESY";
         const apiUrl = `${YT_SY_LOVES_API}/audio?url=${encodeURIComponent(url)}&key=${MY_HEART_SY_KEY}`;
 
+        const filePath = path.join(__dirname, `${Date.now()}.mp3`);
+
+        const response = await axios({
+            method: "GET",
+            url: apiUrl,
+            responseType: "arraybuffer",
+            timeout: 0
+        });
+
+        fs.writeFileSync(filePath, response.data);
+
         await sock.sendMessage(chatId, {
-            audio: { url: apiUrl },
+            audio: fs.readFileSync(filePath),
             mimetype: 'audio/mpeg',
             fileName: `${title}.mp3`,
             contextInfo: {
@@ -923,6 +968,8 @@ async function handleYtAudio(sock, chatId, message, query) {
                 }
             }
         }, { quoted: message });
+
+        fs.unlinkSync(filePath);
 
     } catch (err) {
         console.error("Play Command Error:", err);
