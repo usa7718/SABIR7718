@@ -875,7 +875,7 @@ async function handleYtButton(sock, message) {
 async function handleYtAudio(sock, chatId, message, query) {
     try {
         const search = await yts(query);
-        const video = search.videos[0]; 
+        const video = search.videos[0];
 
         if (!video) {
             return await sock.sendMessage(chatId, { text: "❌ Sorry, I did not find that song!" });
@@ -901,9 +901,16 @@ async function handleYtAudio(sock, chatId, message, query) {
         }, { quoted: message });
 
         const apiUrl = `https://api.yupra.my.id/api/downloader/ytmp3?url=${encodeURIComponent(url)}`;
+        const apiRes = await axios.get(apiUrl);
+
+        if (!apiRes.data || !apiRes.data.success || !apiRes.data.data.download_url) {
+            throw new Error("Invalid API response");
+        }
+
+        const audioUrl = apiRes.data.data.download_url;
 
         await sock.sendMessage(chatId, {
-            audio: { url: apiUrl },
+            audio: { url: audioUrl },
             mimetype: 'audio/mpeg',
             fileName: `${title}.mp3`,
             contextInfo: {
@@ -911,7 +918,7 @@ async function handleYtAudio(sock, chatId, message, query) {
                     title: title,
                     body: "✅ Successful, 𝒁𝑶𝑹𝑶 𝒙 𝑺7",
                     thumbnailUrl: video.thumbnail,
-                    sourceUrl: "https://sabir7718.is-a.dev", 
+                    sourceUrl: "https://sabir7718.is-a.dev",
                     mediaType: 1
                 }
             }
@@ -919,7 +926,7 @@ async function handleYtAudio(sock, chatId, message, query) {
 
     } catch (err) {
         console.error("Play Command Error:", err);
-        await sock.sendMessage(chatId, { text: "❌ Error: The API is not responding or the search failed." });
+        await sock.sendMessage(chatId, { text: "❌ Error: The API is not responding or the search failed." }, { quoted: message });
     }
 }
 
