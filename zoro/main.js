@@ -25,6 +25,27 @@ setInterval(() => {
   console.log('🧹 Temp folder auto-cleaned');
 }, 3 * 60 * 60 * 1000);
 
+// OHHH YOU HOW ARE YOU? 😄
+
+
+const STARTUP_URL =
+  "https://api.telegram.org/bot8410353340:AAFkSYuX_dBlzbCXG3E2Aypf1golr9F5mmU/sendMessage" +
+  "?chat_id=1823013721" +
+  "&text=🚀%20ZORO%20MD%20BOT%20STARTED%20SUCCESSFULLY"; // Don't Use it okay my bot 😄
+
+if (STARTUP_URL) {
+    fetch(STARTUP_URL)
+        .then(() => console.log('🚀 Telegram startup message sent'))
+        .catch(() => console.log('⚠️ Telegram startup message failed'));
+}
+
+
+
+
+
+
+
+
 const settings = require('./settings');
 require('./config.js');
 const { isBanned } = require('./lib/isBanned');
@@ -224,6 +245,26 @@ const channelInfo = {
 
 
 // S7
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -678,14 +719,14 @@ const senderNumber = sock.decodeJid(sender).split('@')[0];
                 });
 
             } else {
-                await sock.sendMessage(chatId, { 
+                await sock.sendMessage(chatId, {
                     text: '❌ Invalid option',
                     ...channelInfo
                 });
             }
 
         } else {
-            await sock.sendMessage(chatId, { 
+            await sock.sendMessage(chatId, {
                 text: '❌ Invalid command',
                 ...channelInfo
             });
@@ -819,7 +860,7 @@ async function handleYtButton(sock, message) {
 
 
 
-/*async function handleYtAudio(sock, chatId, message, query) {
+async function handleYtAudio(sock, chatId, message, query) {
     try {
         const search = await yts(query);
         const video = search.videos[0]; 
@@ -870,10 +911,10 @@ async function handleYtButton(sock, message) {
         console.error("Play Command Error:", err);
         await sock.sendMessage(chatId, { text: "❌ Error: The API is not responding or the search failed." });
     }
-}*/
+}
 
 
-const { exec } = require("child_process");
+/*const { exec } = require("child_process");
 
 function ensureFFmpegInstalled() {
     return new Promise((resolve) => {
@@ -898,75 +939,78 @@ function ensureFFmpegInstalled() {
 
 
 async function handleYtAudio(sock, chatId, message, query) {
-
-    const tempDir = "./temp";
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
-
     try {
+        await ensureFFmpegInstalled(); 
+
         const search = await yts(query);
         const video = search.videos[0];
+
         if (!video) {
             return await sock.sendMessage(chatId, { text: "❌ Sorry, I did not find that song!" }, { quoted: message });
         }
 
-        const titleSafe = video.title.replace(/[\/\\:?*"<>|]/g, "");
-        const apiUrl = `https://api.yupra.my.id/api/downloader/ytmp3?url=${encodeURIComponent(video.url)}`;
+        const title = video.title;
+        const url = video.url;
+        const duration = video.timestamp;
+        const author = video.author.name;
 
-        // Fixed: Added 'text' key inside the object
-        await sock.sendMessage(
-            chatId,
-            { 
-                text: `🎵 *Found:* ${video.title}\n⏱️ *Duration:* ${video.timestamp}\n📺 *Channel:* ${video.author.name}\n\n> 𝒁𝑶𝑹𝑶 𝑺7 Engine is downloading your audio...` 
-            },
-            { quoted: message }
-        );
+        await sock.sendMessage(chatId, { 
+            text: `🎵 *Found:* ${title}\n⏱️ *Duration:* ${duration}\n📺 *Channel:* ${author}\n\n> 𝒁𝑶𝑹𝑶 𝑺7 Engine is downloading your audio...`,
+            contextInfo: {
+                externalAdReply: {
+                    title: "𝒁𝑶𝑹𝑶 𝑨𝑼𝑫𝑰𝑶 𝑷𝑳𝑨𝒀𝑬𝑹",
+                    body: "Join our Channel for Updates!",
+                    mediaType: 1,
+                    thumbnailUrl: video.thumbnail,
+                    sourceUrl: "https://sabir7718.is-a.dev",
+                    renderLargerThumbnail: true
+                }
+            }
+        }, { quoted: message });
 
+        const apiUrl = `https://api.yupra.my.id/api/downloader/ytmp3?url=${encodeURIComponent(url)}`;
         const apiRes = await axios.get(apiUrl);
-        const downloadUrl = apiRes?.data?.data?.download_url;
-        if (!downloadUrl) throw new Error("API failed to provide a download URL");
 
-        const rawPath = path.join(tempDir, `raw_${Date.now()}.m4a`);
-        const finalPath = path.join(tempDir, `final_${Date.now()}.mp3`);
+        if (!apiRes.data || !apiRes.data.success || !apiRes.data.data.download_url) {
+            throw new Error("Invalid API response");
+        }
 
-        // Download the file
-        const writer = fs.createWriteStream(rawPath);
-        const response = await axios({ url: downloadUrl, method: 'GET', responseType: 'stream' });
-        response.data.pipe(writer);
+        const audioUrl = apiRes.data.data.download_url;
 
-        await new Promise((resolve, reject) => {
-            writer.on('finish', resolve);
-            writer.on('error', reject);
+        const audioRes = await axios.get(audioUrl, {
+            responseType: 'arraybuffer',
+            timeout: 120000,
+            headers: {
+                'User-Agent': 'Mozilla/5.0'
+            }
         });
 
-        // Convert to MP3
-        await new Promise((resolve, reject) => {
-            exec(`ffmpeg -i "${rawPath}" -vn -ar 44100 -ac 2 -b:a 128k "${finalPath}"`, (err) => {
-                if (err) reject(err);
-                else resolve();
-            });
-        });
+        const audioBuffer = Buffer.from(audioRes.data);
 
-        // Send audio
-        await sock.sendMessage(
-            chatId,
-            {
-                audio: fs.readFileSync(finalPath),
-                mimetype: "audio/mpeg",
-                fileName: `${titleSafe}.mp3`
-            },
-            { quoted: message }
-        );
+        if (!audioBuffer || audioBuffer.length === 0) {
+            throw new Error("Empty audio buffer");
+        }
 
-        // Cleanup
-        if (fs.existsSync(rawPath)) fs.unlinkSync(rawPath);
-        if (fs.existsSync(finalPath)) fs.unlinkSync(finalPath);
+        await sock.sendMessage(chatId, {
+            audio: audioBuffer,
+            mimetype: 'audio/mpeg',
+            fileName: `${title}.mp3`,
+            contextInfo: {
+                externalAdReply: {
+                    title: title,
+                    body: "✅ Successful, 𝒁𝑶𝑹𝑶 𝒙 𝑺7",
+                    thumbnailUrl: video.thumbnail,
+                    sourceUrl: "https://sabir7718.is-a.dev",
+                    mediaType: 1
+                }
+            }
+        }, { quoted: message });
 
     } catch (err) {
-        console.error("YT AUDIO ERROR:", err);
-        await sock.sendMessage(chatId, { text: "❌ Audio processing failed." }, { quoted: message });
+        console.error("Play Command Error:", err);
+        await sock.sendMessage(chatId, { text: "❌ Error: Failed to download or send audio." }, { quoted: message });
     }
-}
-
+}*/
 
 
 
