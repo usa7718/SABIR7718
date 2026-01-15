@@ -900,66 +900,58 @@ function ensureFFmpegInstalled() {
 async function handleYtAudio(sock, chatId, message, query) {
     const fs = require("fs");
     const path = require("path");
+    const axios = require("axios"); // Added missing import
+    const { exec } = require("child_process"); // Added missing import
+    const yts = require("yt-search"); // Added missing import
 
     const tempDir = "./temp";
     if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
 
     try {
-        // 1️⃣ ffmpeg check/install
-        await ensureFFmpegInstalled();
-
-        // 2️⃣ search
         const search = await yts(query);
         const video = search.videos[0];
         if (!video) {
-            return await sock.sendMessage(
-                chatId,
-                { text: "❌ Sorry, I did not find that song!" },
-                { quoted: message }
-            );
+            return await sock.sendMessage(chatId, { text: "❌ Sorry, I did not find that song!" }, { quoted: message });
         }
 
         const titleSafe = video.title.replace(/[\/\\:?*"<>|]/g, "");
         const apiUrl = `https://api.yupra.my.id/api/downloader/ytmp3?url=${encodeURIComponent(video.url)}`;
 
+        // Fixed: Added 'text' key inside the object
         await sock.sendMessage(
             chatId,
-            {
-`🎵 *Found:* ${video.title}
-⏱️ *Duration:* ${video.timestamp}
-📺 *Channel:* ${video.author.name}
-
-> ZORO S7 Engine processing audio...`
+            { 
+                text: `🎵 *Found:* ${video.title}\n⏱️ *Duration:* ${video.timestamp}\n📺 *Channel:* ${video.author.name}\n\n> 𝒁𝑶𝑹𝑶 𝑺7 Engine is downloading your audio...` 
             },
             { quoted: message }
         );
 
-        // 3️⃣ API call
         const apiRes = await axios.get(apiUrl);
         const downloadUrl = apiRes?.data?.data?.download_url;
-        if (!downloadUrl) throw new Error("API failed");
+        if (!downloadUrl) throw new Error("API failed to provide a download URL");
 
-        // 4️⃣ save RAW audio
         const rawPath = path.join(tempDir, `raw_${Date.now()}.m4a`);
-        const rawStream = await axios.get(downloadUrl, { responseType: "stream" });
-
-        await new Promise((res, rej) => {
-            const w = fs.createWriteStream(rawPath);
-            rawStream.data.pipe(w);
-            w.on("finish", res);
-            w.on("error", rej);
-        });
-
-        // 5️⃣ convert using ffmpeg
         const finalPath = path.join(tempDir, `final_${Date.now()}.mp3`);
-        await new Promise((res, rej) => {
-            exec(
-                `ffmpeg -y -i "${rawPath}" -vn -ar 44100 -ac 2 -ab 128k "${finalPath}"`,
-                (err) => (err ? rej(err) : res())
-            );
+
+        // Download the file
+        const writer = fs.createWriteStream(rawPath);
+        const response = await axios({ url: downloadUrl, method: 'GET', responseType: 'stream' });
+        response.data.pipe(writer);
+
+        await new Promise((resolve, reject) => {
+            writer.on('finish', resolve);
+            writer.on('error', reject);
         });
 
-        // 6️⃣ send WhatsApp compatible mp3
+        // Convert to MP3
+        await new Promise((resolve, reject) => {
+            exec(`ffmpeg -i "${rawPath}" -vn -ar 44100 -ac 2 -b:a 128k "${finalPath}"`, (err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
+
+        // Send audio
         await sock.sendMessage(
             chatId,
             {
@@ -970,19 +962,16 @@ async function handleYtAudio(sock, chatId, message, query) {
             { quoted: message }
         );
 
-        // 7️⃣ cleanup
-        fs.unlinkSync(rawPath);
-        fs.unlinkSync(finalPath);
+        // Cleanup
+        if (fs.existsSync(rawPath)) fs.unlinkSync(rawPath);
+        if (fs.existsSync(finalPath)) fs.unlinkSync(finalPath);
 
     } catch (err) {
         console.error("YT AUDIO ERROR:", err);
-        await sock.sendMessage(
-            chatId,
-            { text: "❌ Audio processing failed." },
-            { quoted: message }
-        );
+        await sock.sendMessage(chatId, { text: "❌ Audio processing failed." }, { quoted: message });
     }
 }
+
 
 
 
