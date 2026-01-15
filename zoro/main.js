@@ -898,11 +898,6 @@ function ensureFFmpegInstalled() {
 
 
 async function handleYtAudio(sock, chatId, message, query) {
-    const fs = require("fs");
-    const path = require("path");
-    const axios = require("axios"); // Added missing import
-    const { exec } = require("child_process"); // Added missing import
-    const yts = require("yt-search"); // Added missing import
 
     const tempDir = "./temp";
     if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
