@@ -926,8 +926,8 @@ async function handleYtAudio(sock, chatId, message, query) {
 
         await sock.sendMessage(chatId, {
             audio: audioBuffer,
-            mimetype: 'audio/mpeg',
-            fileName: `${title}.mp3`,
+            mimetype: "audio/mp4",  
+            fileName: `${title}.m4a`,    
             contextInfo: {
                 externalAdReply: {
                     title: title,
