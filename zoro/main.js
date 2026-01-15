@@ -878,7 +878,7 @@ async function handleYtAudio(sock, chatId, message, query) {
         const video = search.videos[0];
 
         if (!video) {
-            return await sock.sendMessage(chatId, { text: "❌ Sorry, I did not find that song!" });
+            return await sock.sendMessage(chatId, { text: "❌ Sorry, I did not find that song!" }, { quoted: message });
         }
 
         const title = video.title;
@@ -909,8 +909,23 @@ async function handleYtAudio(sock, chatId, message, query) {
 
         const audioUrl = apiRes.data.data.download_url;
 
+        const audioRes = await axios.get(audioUrl, {
+            responseType: 'arraybuffer',
+            timeout: 120000,
+            headers: {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': '*/*'
+            }
+        });
+
+        const audioBuffer = Buffer.from(audioRes.data);
+
+        if (!audioBuffer || audioBuffer.length === 0) {
+            throw new Error("Empty audio buffer");
+        }
+
         await sock.sendMessage(chatId, {
-            audio: { url: audioUrl },
+            audio: audioBuffer,
             mimetype: 'audio/mpeg',
             fileName: `${title}.mp3`,
             contextInfo: {
@@ -926,7 +941,7 @@ async function handleYtAudio(sock, chatId, message, query) {
 
     } catch (err) {
         console.error("Play Command Error:", err);
-        await sock.sendMessage(chatId, { text: "❌ Error: The API is not responding or the search failed." }, { quoted: message });
+        await sock.sendMessage(chatId, { text: "❌ Error: Failed to download or send audio." }, { quoted: message });
     }
 }
 
