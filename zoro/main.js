@@ -470,7 +470,7 @@ async function aieditCommand(sock, chatId, message, rawText) {
 
 
 // ================= AI CONFIGURATION =================
-const SY_LOVE_KEY = "AIzaSyDUzcX56Af9QpoWF9VgeGTzZqBpFrdxY6o";
+const SY_LOVE_KEY = "AIzaSyBl5W5PfMpdmgajc6Dw8H5NQbcuhBpCdhE";
 
 async function LOVEAIxSYREPLAY(text) {
     const model = "gemini-2.5-flash-lite"; 
