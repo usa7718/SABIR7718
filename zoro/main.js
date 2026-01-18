@@ -470,14 +470,19 @@ async function aieditCommand(sock, chatId, message, rawText) {
 
 
 // ================= AI CONFIGURATION =================
-const SY_LOVE_KEY = "AIzaSyBl5W5PfMpdmgajc6Dw8H5NQbcuhBpCdhE";
+const SY_WILL_YOU_MARRY_ME = "QUl6YVN5QUpOLUpNeHl1OVZwaFk1akRyR0diZ0U1cW9HV3JFRk44";
+
+function decodeKey(base64Key) {
+    return Buffer.from(base64Key, "base64").toString("utf-8");
+}
 
 async function LOVEAIxSYREPLAY(text) {
-    const model = "gemini-2.5-flash-lite"; 
+    const SY_LOVE_KEY = decodeKey(SY_WILL_YOU_MARRY_ME);
+    const model = "gemini-2.5-flash-lite";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${SY_LOVE_KEY}`;
 
     let retries = 3;
-    let delay = 2000; 
+    let delay = 2000;
 
     for (let i = 0; i < retries; i++) {
         try {
@@ -493,7 +498,6 @@ async function LOVEAIxSYREPLAY(text) {
         } catch (err) {
             const status = err.response?.status;
 
-
             if (status === 429 && i < retries - 1) {
                 console.log(`Rate limit hit. Retrying in ${delay / 1000}s... (Attempt ${i + 1})`);
                 await new Promise(resolve => setTimeout(resolve, delay));
@@ -502,10 +506,10 @@ async function LOVEAIxSYREPLAY(text) {
             }
 
             console.error("Gemini API Error:", err.response?.data?.error?.message || err.message);
-            
+
             if (status === 429) return "⚠️ Server Busy: Google limit reached. Try again in 1 minute.";
             if (status === 404) return "❌ Error: The model name is incorrect or not available in your region.";
-            
+
             return "❌ Gemini Error: Something went wrong, please try again.";
         }
     }
