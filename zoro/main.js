@@ -859,10 +859,8 @@ async function handleStatusUpdate(sock, status, phoneNumber) {
 
 // download YT with SY loves 
 
-async function handleYtButton(sock, message) {
-    const tempFolder = path.join(__dirname, "temp");
-    if (!fs.existsSync(tempFolder)) fs.mkdirSync(tempFolder);
 
+async function handleYtButton(sock, message) {
     try {
         let selectedId = '';
         if (message.message?.buttonsResponseMessage) {
@@ -876,50 +874,71 @@ async function handleYtButton(sock, message) {
 
         const [, quality, url] = selectedId.split('|');
         const chatId = message.key.remoteJid;
-        const fileName = `video_${Date.now()}.mp4`;
-        const filePath = path.join(tempFolder, fileName);
 
-        await sock.sendMessage(chatId, { text: `⏳ *Downloading to Server...*` }, { quoted: message });
+        const title = "YouTube Video"; 
+
+        // TEXT AND AD REPLY UNTOUCHED
+        await sock.sendMessage(chatId, { 
+            text: `⏳ *Downloading:* ${title}...`,
+            contextInfo: {
+                externalAdReply: {
+                    title: "𝒁𝑶𝑹𝑶 𝒀𝑻 𝑫𝑶𝑾𝑵𝑳𝑶𝑨𝑫𝑬𝑹",
+                    body: "ZORO x S7 Engine Processing...",
+                    mediaType: 1,
+                    thumbnailUrl: "https://i.top4top.io/p_3664firq70.jpg",
+                    sourceUrl: "https://sabir7718.is-a.dev",
+                    renderLargerThumbnail: true
+                }
+            }
+        }, { quoted: message });
 
         const YT_SY_LOVES_API = "https://yt-downloader-api-s7.onrender.com";
         const MY_HEART_SY_KEY = "S7LOVESY";
         const apiUrl = `${YT_SY_LOVES_API}/video?key=${MY_HEART_SY_KEY}&quality=${quality}&url=${encodeURIComponent(url)}`;
 
-        const writer = fs.createWriteStream(filePath);
+        // --- INTERNAL LOGIC START (Temp Save) ---
+        const tempDir = path.join(__dirname, 'temp');
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+        
+        const fileName = `zoro_${Date.now()}.mp4`;
+        const filePath = path.join(tempDir, fileName);
+
+        // Downloading to ./temp
         const response = await axios({
             method: 'get',
             url: apiUrl,
             responseType: 'stream',
-            timeout: 600000 
+            timeout: 600000 // 10 min
         });
 
+        const writer = fs.createWriteStream(filePath);
         response.data.pipe(writer);
-        
+
         await new Promise((resolve, reject) => {
             writer.on('finish', resolve);
             writer.on('error', reject);
         });
+        // --- INTERNAL LOGIC END ---
 
-        const simpleCaption = `✅ *Download Successful*\n\n> 𝒁𝑶𝑹𝑶 𝒙 𝑺7`;
-        
+        const simpleCaption = `✅ *Download Successful*\n\n>  𝒁𝑶𝑹𝑶 𝒙 𝑺7`;
+
+        // Send from local file
         await sock.sendMessage(chatId, {
-            video: fs.readFileSync(filePath), 
-            caption: simpleCaption,
-            mimetype: 'video/mp4'
+            video: fs.readFileSync(filePath),
+            caption: simpleCaption
         }, { quoted: message });
 
+        // Delete file after send
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
-            console.log(`🧹 Cleaned up: ${fileName}`);
         }
 
     } catch (err) {
         console.error("YT Button Error:", err);
-        await sock.sendMessage(message.key.remoteJid, { text: "❌ Error processing or sending video." }, { quoted: message });
-        
-        const files = fs.readdirSync(tempFolder);
+        await sock.sendMessage(message.key.remoteJid, { text: "❌ Error downloading video." }, { quoted: message });
     }
 }
+
 
 
 
