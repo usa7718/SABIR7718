@@ -898,7 +898,7 @@ async function handleYtButton(sock, message) {
             method: 'get',
             url: apiUrl,
             responseType: 'arraybuffer', 
-            timeout: 300000 l
+            timeout: 300000
         });
 
         const videoBuffer = Buffer.from(response.data);
