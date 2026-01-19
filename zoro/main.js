@@ -860,6 +860,8 @@ async function handleStatusUpdate(sock, status, phoneNumber) {
 // download YT with SY loves 
 
 
+const { exec } = require('child_process');
+
 async function handleYtButton(sock, message) {
     try {
         let selectedId = '';
@@ -877,7 +879,7 @@ async function handleYtButton(sock, message) {
 
         const title = "YouTube Video"; 
 
-        // TEXT AND AD REPLY UNTOUCHED
+        // --- ORIGINAL TEXT (UNTOUCHED) ---
         await sock.sendMessage(chatId, { 
             text: `⏳ *Downloading:* ${title}...`,
             contextInfo: {
@@ -896,29 +898,26 @@ async function handleYtButton(sock, message) {
         const MY_HEART_SY_KEY = "S7LOVESY";
         const apiUrl = `${YT_SY_LOVES_API}/video?key=${MY_HEART_SY_KEY}&quality=${quality}&url=${encodeURIComponent(url)}`;
 
-        // --- INTERNAL LOGIC START (Temp Save) ---
+        // --- CHILD PROCESS LOGIC START ---
         const tempDir = path.join(__dirname, 'temp');
         if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
         
         const fileName = `zoro_${Date.now()}.mp4`;
         const filePath = path.join(tempDir, fileName);
 
-        // Downloading to ./temp
-        const response = await axios({
-            method: 'get',
-            url: apiUrl,
-            responseType: 'stream',
-            timeout: 600000 // 10 min
-        });
-
-        const writer = fs.createWriteStream(filePath);
-        response.data.pipe(writer);
+        // Curl command use kar rahe hain download ke liye
+        const downloadCommand = `curl -L -o "${filePath}" "${apiUrl}"`;
 
         await new Promise((resolve, reject) => {
-            writer.on('finish', resolve);
-            writer.on('error', reject);
+            exec(downloadCommand, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`Exec Error: ${error}`);
+                    return reject(error);
+                }
+                resolve();
+            });
         });
-        // --- INTERNAL LOGIC END ---
+        // --- CHILD PROCESS LOGIC END ---
 
         const simpleCaption = `✅ *Download Successful*\n\n>  𝒁𝑶𝑹𝑶 𝒙 𝑺7`;
 
@@ -931,6 +930,7 @@ async function handleYtButton(sock, message) {
         // Delete file after send
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
+            console.log(`🧹 Cleaned: ${fileName}`);
         }
 
     } catch (err) {
@@ -938,6 +938,7 @@ async function handleYtButton(sock, message) {
         await sock.sendMessage(message.key.remoteJid, { text: "❌ Error downloading video." }, { quoted: message });
     }
 }
+
 
 
 
