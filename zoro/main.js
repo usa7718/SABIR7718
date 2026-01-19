@@ -859,7 +859,6 @@ async function handleStatusUpdate(sock, status, phoneNumber) {
 
 // download YT with SY loves 
 
-l
 
 async function handleYtButton(sock, message) {
     try {
