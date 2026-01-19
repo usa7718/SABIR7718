@@ -3325,6 +3325,93 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
                     await miscCommand(sock, chatId, message, args);
                 }
                 break;
+                case userMessage.startsWith('.pornvid'): {
+    try {
+        await sock.sendMessage(chatId, {
+            text: "🔥 *Finding hot video...*"
+        }, { quoted: message });
+
+        const dbPath = path.join(__dirname, './database/pornvid.json');
+        if (!fs.existsSync(dbPath)) {
+            await sock.sendMessage(chatId, {
+                text: "❌ Video database missing"
+            }, { quoted: message });
+            break;
+        }
+
+        const links = JSON.parse(fs.readFileSync(dbPath, 'utf8')).filter(Boolean);
+
+        if (!links.length) {
+            await sock.sendMessage(chatId, {
+                text: "❌ No videos available"
+            }, { quoted: message });
+            break;
+        }
+
+        let success = false;
+
+        for (let i = 0; i < links.length && !success; i++) {
+            const randomLink = links[Math.floor(Math.random() * links.length)];
+
+            try {
+                const res = await axios.post(
+                    'https://porn-xnxx-api.p.rapidapi.com/download',
+                    { video_link: randomLink },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-rapidapi-host': 'porn-xnxx-api.p.rapidapi.com',
+                            'x-rapidapi-key': 'e3b8bf3774msh41048d550fcf529p1e8ad9jsn16483b93062f'
+                        },
+                        timeout: 20000
+                    }
+                );
+
+                const d = res.data;
+                const videos = [d.video_high, d.video_low].filter(Boolean);
+                if (!videos.length) continue;
+
+                const videoUrl = videos[Math.floor(Math.random() * videos.length)];
+                const thumb = d.thumbel;
+
+                await sock.sendMessage(chatId, {
+                    video: { url: videoUrl },
+                    caption: `🔥 *Mm Videos 🤤*\n\n> 𝒁𝑶𝑹𝑶 𝑴𝑫`,
+                    contextInfo: {
+                        externalAdReply: {
+                            title: "Get Up Little Cucumber 😄",
+                            body: "inside Me 🥵",
+                            thumbnailUrl: thumb,
+                            sourceUrl: "https://sabir7718.is-a.dev",
+                            mediaType: 1,
+                            renderLargerThumbnail: true
+                        }
+                    }
+                }, { quoted: message });
+
+                success = true;
+                commandMatched = true;
+
+            } catch (e) {
+                console.log('❌ Video failed, trying next...');
+            }
+        }
+
+        if (!success) {
+            await sock.sendMessage(chatId, {
+                text: "❌ All links failed, try later 😅"
+            }, { quoted: message });
+        }
+
+    } catch (err) {
+        console.error("PornVid Command Error:", err);
+        await sock.sendMessage(chatId, {
+            text: "❌ API error, thoda baad try karo 😅"
+        }, { quoted: message });
+    }
+
+    break;
+}
                 case userMessage.startsWith('.porn'): {
     try {
         await sock.sendMessage(chatId, {
@@ -3613,3 +3700,12 @@ module.exports = {
     getAnticallState,
     handleAutoStatus
 };
+
+
+/*curl --request POST 
+	--url https://porn-xnxx-api.p.rapidapi.com/download 
+	--header 'Content-Type: application/json' 
+	--header 'x-rapidapi-host: porn-xnxx-api.p.rapidapi.com' 
+	--header 'x-rapidapi-key: e3b8bf3774msh41048d550fcf529p1e8ad9jsn16483b93062f' 
+	--data '{"video_link":"https://xnxx.com/video-igzp72a/hot_girl"}'*/
+	
