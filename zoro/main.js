@@ -859,9 +859,10 @@ async function handleStatusUpdate(sock, status, phoneNumber) {
 
 // download YT with SY loves 
 
-
-
 async function handleYtButton(sock, message) {
+    const tempFolder = path.join(__dirname, "temp");
+    if (!fs.existsSync(tempFolder)) fs.mkdirSync(tempFolder);
+
     try {
         let selectedId = '';
         if (message.message?.buttonsResponseMessage) {
@@ -875,40 +876,51 @@ async function handleYtButton(sock, message) {
 
         const [, quality, url] = selectedId.split('|');
         const chatId = message.key.remoteJid;
+        const fileName = `video_${Date.now()}.mp4`;
+        const filePath = path.join(tempFolder, fileName);
 
-        const title = "YouTube Video"; 
-
-        await sock.sendMessage(chatId, { 
-            text: `⏳ *Downloading:* ${title}...`,
-            contextInfo: {
-                externalAdReply: {
-                    title: "𝒁𝑶𝑹𝑶 𝒀𝑻 𝑫𝑶𝑾𝑵𝑳𝑶𝑨𝑫𝑬𝑹",
-                    body: "ZORO x S7 Engine Processing...",
-                    mediaType: 1,
-                    thumbnailUrl: "https://i.top4top.io/p_3664firq70.jpg",
-                    sourceUrl: "https://sabir7718.is-a.dev",
-                    renderLargerThumbnail: true
-                }
-            }
-        }, { quoted: message });
+        await sock.sendMessage(chatId, { text: `⏳ *Downloading to Server...*` }, { quoted: message });
 
         const YT_SY_LOVES_API = "https://yt-downloader-api-s7.onrender.com";
         const MY_HEART_SY_KEY = "S7LOVESY";
-
         const apiUrl = `${YT_SY_LOVES_API}/video?key=${MY_HEART_SY_KEY}&quality=${quality}&url=${encodeURIComponent(url)}`;
 
-        const simpleCaption = `✅ *Download Successful*\n\n>  𝒁𝑶𝑹𝑶 𝒙 𝑺7`;
+        const writer = fs.createWriteStream(filePath);
+        const response = await axios({
+            method: 'get',
+            url: apiUrl,
+            responseType: 'stream',
+            timeout: 600000 
+        });
 
+        response.data.pipe(writer);
+        
+        await new Promise((resolve, reject) => {
+            writer.on('finish', resolve);
+            writer.on('error', reject);
+        });
+
+        const simpleCaption = `✅ *Download Successful*\n\n> 𝒁𝑶𝑹𝑶 𝒙 𝑺7`;
+        
         await sock.sendMessage(chatId, {
-            video: { url: apiUrl },
-            caption: simpleCaption
+            video: fs.readFileSync(filePath), 
+            caption: simpleCaption,
+            mimetype: 'video/mp4'
         }, { quoted: message });
+
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`🧹 Cleaned up: ${fileName}`);
+        }
 
     } catch (err) {
         console.error("YT Button Error:", err);
-        await sock.sendMessage(message.key.remoteJid, { text: "❌ Error downloading video." }, { quoted: message });
+        await sock.sendMessage(message.key.remoteJid, { text: "❌ Error processing or sending video." }, { quoted: message });
+        
+        const files = fs.readdirSync(tempFolder);
     }
 }
+
 
 
 //curl "https://yt-downloader-api-s7.onrender.com/video?key=S7LOVESY&quality=480&url=https://www.youtube.com/watch?v=dQw4w9WgXcQ
