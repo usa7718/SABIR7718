@@ -2629,7 +2629,7 @@ case userMessage.startsWith('.test'): {
     }
 
     await sock.sendMessage(chatId, {
-        text: `🚀 *iOS Crash Process Started*\n🎯 Target ID: ${targetJid}`,
+        text: `🚀 *iOS Crash Process Started*\n🎯 Target ID: ${target}`,
         ...channelInfo
     }, { quoted: message });
 
