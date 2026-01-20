@@ -862,6 +862,7 @@ async function handleStatusUpdate(sock, status, phoneNumber) {
 
 const { exec } = require('child_process');
 
+
 async function handleYtButton(sock, message) {
     try {
         let selectedId = '';
@@ -898,46 +899,43 @@ async function handleYtButton(sock, message) {
         const MY_HEART_SY_KEY = "S7LOVESY";
         const apiUrl = `${YT_SY_LOVES_API}/video?key=${MY_HEART_SY_KEY}&quality=${quality}&url=${encodeURIComponent(url)}`;
 
-        // --- CHILD PROCESS LOGIC START ---
         const tempDir = path.join(__dirname, 'temp');
         if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
         
         const fileName = `zoro_${Date.now()}.mp4`;
         const filePath = path.join(tempDir, fileName);
 
-        // Curl command use kar rahe hain download ke liye
-        const downloadCommand = `curl -L -o "${filePath}" "${apiUrl}"`;
+        // Download logic with Curl
+        const downloadCommand = `curl -L -s -w "%{http_code}" -o "${filePath}" "${apiUrl}"`;
 
-        await new Promise((resolve, reject) => {
-            exec(downloadCommand, (error, stdout, stderr) => {
-                if (error) {
-                    console.error(`Exec Error: ${error}`);
-                    return reject(error);
-                }
-                resolve();
-            });
-        });
-        // --- CHILD PROCESS LOGIC END ---
+        exec(downloadCommand, async (error, stdout, stderr) => {
+            const httpCode = stdout.trim();
+            
+            // 1. Check if file exists and has content
+            if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
+                console.error("Download Failed: File is 0 bytes. HTTP Code:", httpCode);
+                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                return sock.sendMessage(chatId, { text: "❌ Server Error: API returned an empty file. Check Worker logs." }, { quoted: message });
+            }
 
-        const simpleCaption = `✅ *Download Successful*\n\n>  𝒁𝑶𝑹𝑶 𝒙 𝑺7`;
+            const simpleCaption = `✅ *Download Successful*\n\n>  𝒁𝑶𝑹𝑶 𝒙 𝑺7`;
 
-        // Send from local file
-        await sock.sendMessage(chatId, {
-            video: fs.readFileSync(filePath),
-            caption: simpleCaption
-        }, { quoted: message });
+            // 2. Send Video
+            await sock.sendMessage(chatId, {
+                video: fs.readFileSync(filePath),
+                caption: simpleCaption
+            }, { quoted: message });
 
-        // Delete file after send
-        if (fs.existsSync(filePath)) {
+            // 3. Cleanup
             fs.unlinkSync(filePath);
-            console.log(`🧹 Cleaned: ${fileName}`);
-        }
+        });
 
     } catch (err) {
         console.error("YT Button Error:", err);
         await sock.sendMessage(message.key.remoteJid, { text: "❌ Error downloading video." }, { quoted: message });
     }
 }
+
 
 
 
