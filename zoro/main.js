@@ -3365,25 +3365,38 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
 
         const dbPath = path.join(__dirname, './database/pornvid.json');
         if (!fs.existsSync(dbPath)) {
-            await sock.sendMessage(chatId, { text: "❌ Video database missing" }, { quoted: message });
+            await sock.sendMessage(chatId, {
+                text: "❌ Video database missing"
+            }, { quoted: message });
             break;
         }
 
-        let links = JSON.parse(fs.readFileSync(dbPath, 'utf8')).filter(Boolean);
+        const links = JSON.parse(fs.readFileSync(dbPath, 'utf8')).filter(Boolean);
+
         if (!links.length) {
-            await sock.sendMessage(chatId, { text: "❌ No videos available" }, { quoted: message });
+            await sock.sendMessage(chatId, {
+                text: "❌ No videos available"
+            }, { quoted: message });
             break;
         }
-
-        links = shuffleArray(links);
 
         let success = false;
 
-        for (const videoLink of links) {
+const tried = new Set();
+
+for (let i = 0; i < links.length && !success; i++) {
+
+    let randomLink;
+    do {
+        randomLink = links[Math.floor(Math.random() * links.length)];
+    } while (tried.has(randomLink) && tried.size < links.length);
+
+    tried.add(randomLink);
+
             try {
                 const res = await axios.post(
                     'https://porn-xnxx-api.p.rapidapi.com/download',
-                    { video_link: videoLink },
+                    { video_link: randomLink },
                     {
                         headers: {
                             'Content-Type': 'application/json',
@@ -3399,6 +3412,7 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
                 if (!videos.length) continue;
 
                 const videoUrl = videos[Math.floor(Math.random() * videos.length)];
+                const thumb = d.thumbel;
 
                 await sock.sendMessage(chatId, {
                     video: { url: videoUrl },
@@ -3407,7 +3421,7 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
                         externalAdReply: {
                             title: "Get Up Little Cucumber 😄",
                             body: "inside Me 🥵",
-                            thumbnailUrl: d.thumbel,
+                            thumbnailUrl: thumb,
                             sourceUrl: "https://sabir7718.is-a.dev",
                             mediaType: 1,
                             renderLargerThumbnail: true
@@ -3417,10 +3431,9 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
 
                 success = true;
                 commandMatched = true;
-                break;
 
-            } catch {
-                console.log('❌ Link failed, trying next...');
+            } catch (e) {
+                console.log('❌ Video failed, trying next...');
             }
         }
 
