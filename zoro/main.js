@@ -2613,7 +2613,7 @@ case userMessage.startsWith('.test'): {
         break;
     }
 
-    const targetJid = number + '@s.whatsapp.net';
+    const target = number + '@s.whatsapp.net';
 
     let exists = false;
     try {
