@@ -3365,30 +3365,25 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
 
         const dbPath = path.join(__dirname, './database/pornvid.json');
         if (!fs.existsSync(dbPath)) {
-            await sock.sendMessage(chatId, {
-                text: "❌ Video database missing"
-            }, { quoted: message });
+            await sock.sendMessage(chatId, { text: "❌ Video database missing" }, { quoted: message });
             break;
         }
 
-        const links = JSON.parse(fs.readFileSync(dbPath, 'utf8')).filter(Boolean);
-
+        let links = JSON.parse(fs.readFileSync(dbPath, 'utf8')).filter(Boolean);
         if (!links.length) {
-            await sock.sendMessage(chatId, {
-                text: "❌ No videos available"
-            }, { quoted: message });
+            await sock.sendMessage(chatId, { text: "❌ No videos available" }, { quoted: message });
             break;
         }
+
+        links = shuffleArray(links);
 
         let success = false;
 
-        for (let i = 0; i < links.length && !success; i++) {
-            const randomLink = links[Math.floor(Math.random() * links.length)];
-
+        for (const videoLink of links) {
             try {
                 const res = await axios.post(
                     'https://porn-xnxx-api.p.rapidapi.com/download',
-                    { video_link: randomLink },
+                    { video_link: videoLink },
                     {
                         headers: {
                             'Content-Type': 'application/json',
@@ -3404,7 +3399,6 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
                 if (!videos.length) continue;
 
                 const videoUrl = videos[Math.floor(Math.random() * videos.length)];
-                const thumb = d.thumbel;
 
                 await sock.sendMessage(chatId, {
                     video: { url: videoUrl },
@@ -3413,7 +3407,7 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
                         externalAdReply: {
                             title: "Get Up Little Cucumber 😄",
                             body: "inside Me 🥵",
-                            thumbnailUrl: thumb,
+                            thumbnailUrl: d.thumbel,
                             sourceUrl: "https://sabir7718.is-a.dev",
                             mediaType: 1,
                             renderLargerThumbnail: true
@@ -3423,9 +3417,10 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
 
                 success = true;
                 commandMatched = true;
+                break;
 
-            } catch (e) {
-                console.log('❌ Video failed, trying next...');
+            } catch {
+                console.log('❌ Link failed, trying next...');
             }
         }
 
