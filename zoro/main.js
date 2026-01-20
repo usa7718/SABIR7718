@@ -3382,16 +3382,8 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
 
         let success = false;
 
-const tried = new Set();
-
-for (let i = 0; i < links.length && !success; i++) {
-
-    let randomLink;
-    do {
-        randomLink = links[Math.floor(Math.random() * links.length)];
-    } while (tried.has(randomLink) && tried.size < links.length);
-
-    tried.add(randomLink);
+        for (let i = 0; i < links.length && !success; i++) {
+            const randomLink = links[Math.floor(Math.random() * links.length)];
 
             try {
                 const res = await axios.post(
