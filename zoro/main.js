@@ -951,9 +951,10 @@ const { exec } = require('child_process');
 
 const { downloadZoroVideo } = require('./data/zoroDl'); 
 
+
 async function handleYtButton(sock, message) {
+    let filePath = null; // Path track karne ke liye
     try {
-        // --- 1. ID Extraction Logic ---
         let selectedId = '';
         if (message.message?.buttonsResponseMessage) {
             selectedId = message.message.buttonsResponseMessage.selectedButtonId;
@@ -967,47 +968,44 @@ async function handleYtButton(sock, message) {
         const [, quality, url] = selectedId.split('|');
         const chatId = message.key.remoteJid;
 
-        // --- 2. Send "Processing" Message ---
-        await sock.sendMessage(chatId, { 
-            text: `⏳ *Downloading Video...*\n> Quality: ${quality}`,
-            contextInfo: {
-                externalAdReply: {
-                    title: "𝒁𝑶𝑹𝑶 𝒀𝑻 𝑫𝑶𝑾𝑵𝑳𝑶𝑨𝑫𝑬𝑹",
-                    body: "Processing your request...",
-                    mediaType: 1,
-                    thumbnailUrl: "https://i.top4top.io/p_3664firq70.jpg",
-                    sourceUrl: "https://sabir7718.is-a.dev",
-                    renderLargerThumbnail: true
-                }
-            }
-        }, { quoted: message });
+        // 1. Loading Message
+        await sock.sendMessage(chatId, { text: `🚀 *ZORO:* Video mil gayi hai, bhej raha hoon...` }, { quoted: message });
 
-        // --- 3. CALL THE NEW WORKER FILE ---
-        // Ye line sara hard work karegi aur bas file path return karegi
-        const filePath = await downloadZoroVideo(url, quality);
+        // 2. Download from Worker
+        filePath = await downloadZoroVideo(url, quality);
 
-        // --- 4. Send the Video ---
+        // Check if file exists before reading
+        if (!fs.existsSync(filePath)) {
+            throw new Error("File not found on disk after download");
+        }
+
+        // 3. READ FILE AS BUFFER (Sabse safe method)
+        // Isse path ka jhanjhat khatam ho jata hai
+        const videoBuffer = fs.readFileSync(filePath);
+
+        // 4. SEND TO WHATSAPP
         await sock.sendMessage(chatId, {
-            video: { url: filePath }, // Baileys can read path directly
+            video: videoBuffer, // Path ki jagah Buffer bhej rahe hain
             caption: `✅ *Download Successful*\n\n> 𝒁𝑶𝑹𝑶 𝒙 𝑺7`,
-            mimetype: 'video/mp4'
+            mimetype: 'video/mp4',
+            fileName: `zoro_video.mp4`
         }, { quoted: message });
 
-        // --- 5. Cleanup ---
-        // Video bhejne ke baad file delete kar do
-        fs.unlink(filePath, (err) => {
-            if (err) console.error("Error deleting temp file:", err);
-        });
+        console.log("✅ Video sent successfully!");
 
     } catch (err) {
         console.error("Main Handler Error:", err);
-        
-        let errorMessage = "❌ Error processing download.";
-        if (err.message.includes("Worker Busy") || err.message.includes("404")) {
-             errorMessage = "❌ API Error: Workers are busy or Link expired. Try again.";
+        await sock.sendMessage(message.key.remoteJid, { text: `❌ Sending Error: ${err.message}` }, { quoted: message });
+    } finally {
+        // 5. CLEANUP (Hamesha finally mein rakhein taaki error aaye tab bhi delete ho)
+        if (filePath && fs.existsSync(filePath)) {
+            try {
+                fs.unlinkSync(filePath);
+                console.log("🗑️ Temp file deleted.");
+            } catch (unlinkErr) {
+                console.error("Cleanup Error:", unlinkErr);
+            }
         }
-
-        await sock.sendMessage(message.key.remoteJid, { text: errorMessage }, { quoted: message });
     }
 }
 
