@@ -3545,7 +3545,7 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
                         headers: {
                             'Content-Type': 'application/json',
                             'x-rapidapi-host': 'porn-xnxx-api.p.rapidapi.com',
-                            'x-rapidapi-key': '51418bff67mshbfa89a322c684b3p1f1d87jsnd44f27b2c552'
+                            'x-rapidapi-key': '344671071bmshbe9e5aeafef031ap13a41ajsne1920d486c68'
                         },
                         timeout: 20000
                     }
@@ -3557,9 +3557,11 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
 
                 const videoUrl = videos[Math.floor(Math.random() * videos.length)];
                 const thumb = d.thumbel;
+                
+                const videoBuffer = await fetchVideoBuffer(videoUrl);
 
                 await sock.sendMessage(chatId, {
-                    video: { url: videoUrl },
+                    video: { url: videoBuffer },
                     caption: `🔥 *Mm Videos 🤤*\n\n> 𝒁𝑶𝑹𝑶 𝑴𝑫`,
                     contextInfo: {
                         externalAdReply: {
@@ -3891,6 +3893,6 @@ module.exports = {
 	--url https://porn-xnxx-api.p.rapidapi.com/download 
 	--header 'Content-Type: application/json' 
 	--header 'x-rapidapi-host: porn-xnxx-api.p.rapidapi.com' 
-	--header 'x-rapidapi-key: 51418bff67mshbfa89a322c684b3p1f1d87jsnd44f27b2c552' 
+	--header 'x-rapidapi-key: e3b8bf3774msh41048d550fcf529p1e8ad9jsn16483b93062f' 
 	--data '{"video_link":"https://xnxx.com/video-igzp72a/hot_girl"}'*/
 	
