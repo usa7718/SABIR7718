@@ -3577,8 +3577,9 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
                 commandMatched = true;
 
             } catch (e) {
-                console.log('❌ Video failed, trying next...');
-            }
+    console.log('❌ Video failed, trying next...');
+    console.error(e);
+}
         }
 
         if (!success) {
