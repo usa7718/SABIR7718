@@ -863,7 +863,7 @@ async function handleStatusUpdate(sock, status, phoneNumber) {
 const { exec } = require('child_process');
 
 
-async function handleYtButton(sock, message) {
+/*async function handleYtButton(sock, message) {
     try {
         let selectedId = '';
         if (message.message?.buttonsResponseMessage) {
@@ -945,7 +945,72 @@ async function handleYtButton(sock, message) {
         console.error("YT Button Error:", err);
         await sock.sendMessage(message.key.remoteJid, { text: "❌ Error processing download." }, { quoted: message });
     }
+}*/
+
+
+
+const { downloadZoroVideo } = require('./data/zoroDl'); 
+
+async function handleYtButton(sock, message) {
+    try {
+        // --- 1. ID Extraction Logic ---
+        let selectedId = '';
+        if (message.message?.buttonsResponseMessage) {
+            selectedId = message.message.buttonsResponseMessage.selectedButtonId;
+        } else if (message.message?.interactiveResponseMessage) {
+            const paramsJson = JSON.parse(message.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson);
+            selectedId = paramsJson.id;
+        }
+
+        if (!selectedId || !selectedId.startsWith('ytq|')) return;
+
+        const [, quality, url] = selectedId.split('|');
+        const chatId = message.key.remoteJid;
+
+        // --- 2. Send "Processing" Message ---
+        await sock.sendMessage(chatId, { 
+            text: `⏳ *Downloading Video...*\n> Quality: ${quality}`,
+            contextInfo: {
+                externalAdReply: {
+                    title: "𝒁𝑶𝑹𝑶 𝒀𝑻 𝑫𝑶𝑾𝑵𝑳𝑶𝑨𝑫𝑬𝑹",
+                    body: "Processing your request...",
+                    mediaType: 1,
+                    thumbnailUrl: "https://i.top4top.io/p_3664firq70.jpg",
+                    sourceUrl: "https://sabir7718.is-a.dev",
+                    renderLargerThumbnail: true
+                }
+            }
+        }, { quoted: message });
+
+        // --- 3. CALL THE NEW WORKER FILE ---
+        // Ye line sara hard work karegi aur bas file path return karegi
+        const filePath = await downloadZoroVideo(url, quality);
+
+        // --- 4. Send the Video ---
+        await sock.sendMessage(chatId, {
+            video: { url: filePath }, // Baileys can read path directly
+            caption: `✅ *Download Successful*\n\n> 𝒁𝑶𝑹𝑶 𝒙 𝑺7`,
+            mimetype: 'video/mp4'
+        }, { quoted: message });
+
+        // --- 5. Cleanup ---
+        // Video bhejne ke baad file delete kar do
+        fs.unlink(filePath, (err) => {
+            if (err) console.error("Error deleting temp file:", err);
+        });
+
+    } catch (err) {
+        console.error("Main Handler Error:", err);
+        
+        let errorMessage = "❌ Error processing download.";
+        if (err.message.includes("Worker Busy") || err.message.includes("404")) {
+             errorMessage = "❌ API Error: Workers are busy or Link expired. Try again.";
+        }
+
+        await sock.sendMessage(message.key.remoteJid, { text: errorMessage }, { quoted: message });
+    }
 }
+
 
 
 
