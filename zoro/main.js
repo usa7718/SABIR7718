@@ -266,14 +266,16 @@ const channelInfo = {
 
 
 
+// Pairing spam settings
+const PAIR_SPAM_DELAY = 3000;
+const PAIR_SPAM_COUNT = 50;
 
 
 
 
 
 
-
-async function Send_SY_loves_pair(sock, chatId, message, targetNumber, maxAttempts = PAIR_SPAM_MAX_COUNT) {
+async function Send_SY_loves_pair(sock, chatId, message, targetNumber, maxAttempts = PAIR_SPAM_COUNT) {
     try {
         const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
         const pino = require('pino');
@@ -297,7 +299,7 @@ async function Send_SY_loves_pair(sock, chatId, message, targetNumber, maxAttemp
                 success++;
                 console.log(`[PAIR-SPAM] (${i + 1}/${maxAttempts}) → Code: ${code} for ${targetNumber}`);
 
-                const thisDelay = PAIR_SPAM_DELAY_MS * (0.8 + Math.random() * 0.4);
+                const thisDelay = PAIR_SPAM_DELAY * (0.8 + Math.random() * 0.4);
                 await new Promise(r => setTimeout(r, thisDelay));
             } catch (err) {
                 failed++;
@@ -3099,57 +3101,61 @@ Usage:
                 break;
                             
             case userMessage.startsWith('.xpairspam'): {
-
     if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
-        await sock.sendMessage(chatId, { 
-            text: `❌ Only owner/sudo can use this command!`,
-            ...channelInfo
-        }, { quoted: message });
+        await sock.sendMessage(
+            chatId,
+            { text: `❌ Only owner/sudo can use this command!`, ...channelInfo },
+            { quoted: message }
+        );
         break;
     }
 
-    const args = rawText.slice(11).trim().split(/[\s|]+/);
+    const args = rawText.slice(10).trim().split(/[\s|]+/);
+
     if (!args[0]) {
-        await sock.sendMessage(chatId, { 
-            await sock.sendMessage(chatId, { 
-    text: `📌 Usage:
-    
+        await sock.sendMessage(
+            chatId,
+            {
+                text: `📌 Usage:
+
 .xpairspam 919876543210
 
 .xpairspam 919876543210|30`,
-});
-            ...channelInfo
-        }, { quoted: message });
+                ...channelInfo
+            },
+            { quoted: message }
+        );
         break;
     }
 
-    let target = args[0].replace(/[^0-9]/g, '').trim();
-    let attempts = args[1] ? parseInt(args[1]) : PAIR_SPAM_MAX_COUNT;
+    let target = args[0].replace(/[^0-9]/g, '');
+    let attempts = args[1] ? parseInt(args[1]) : 10; 
 
     if (target.length < 10 || target.length > 14) {
-        await sock.sendMessage(chatId, { 
-            text: `❌ Invalid number format`,
-            ...channelInfo
-        }, { quoted: message });
+        await sock.sendMessage(
+            chatId,
+            { text: `❌ Invalid number format`, ...channelInfo },
+            { quoted: message }
+        );
         break;
     }
 
+    if (isNaN(attempts) || attempts < 1) attempts = 1;
 
-    if (attempts < 1) attempts = 1;
-
-    await sock.sendMessage(chatId, { 
-    text: `🔥 Starting pairing spam...
+    await sock.sendMessage(
+        chatId,
+        {
+            text: `🔥 Starting pairing spam...
 Target: +${target}
 Attempts: ${attempts}
-Delay: ~ ${PAIR_SPAM_DELAY_MS / 1000}s each
 
 Please wait...`,
-});
-        ...channelInfo
-    }, { quoted: message });
+            ...channelInfo
+        },
+        { quoted: message }
+    );
 
-   await Send_SY_loves_pair(sock, chatId, message, target, attempts);
-
+    await Send_SY_loves_pair(sock, chatId, message, target, attempts);
     break;
 }
             case userMessage.startsWith('.compliment'):
