@@ -268,11 +268,7 @@ const channelInfo = {
 
 // Pairing spam settings
 const PAIR_SPAM_DELAY = 3000;
-const PAIR_SPAM_COUNT = 50;
-
-
-
-
+const PAIR_SPAM_COUNT = 10;
 
 
 async function Send_SY_loves_pair(sock, chatId, message, targetNumber, maxAttempts = PAIR_SPAM_COUNT) {
@@ -304,26 +300,32 @@ async function Send_SY_loves_pair(sock, chatId, message, targetNumber, maxAttemp
             } catch (err) {
                 failed++;
                 console.log(`[PAIR-SPAM] Failed attempt ${i+1}:`, err.message || err);
-                await new Promise(r => setTimeout(r, 10000));
+                await new Promise(r => setTimeout(r, 5000));
             }
         }
 
-        await sock.sendMessage(chatId, {
-    text: `🏁 Pairing spam finished!\n\nTarget: +${targetNumber}\n✅ Success: ${success}\n❌ Failed: ${failed}`
-});
-            ...channelInfo
-        }, { quoted: message });
+        await sock.sendMessage(
+            chatId, 
+            Object.assign({
+                text: `🏁 Pairing spam finished!\n\nTarget: +${targetNumber}\n✅ Success: ${success}\n❌ Failed: ${failed}`
+            }, channelInfo), 
+            { quoted: message }
+        );
 
-        Spam_SY_Love_Sock.end();
+        if (Spam_SY_Love_Sock.ws) Spam_SY_Love_Sock.end();
 
     } catch (err) {
         console.error("Pairing spam crashed:", err);
-        await sock.sendMessage(chatId, { 
-            text: `❌ Error while sending pairing codes.`,
-            ...channelInfo
-        }, { quoted: message });
+        await sock.sendMessage(
+            chatId, 
+            Object.assign({ 
+                text: `❌ Error while sending pairing codes.` 
+            }, channelInfo), 
+            { quoted: message }
+        );
     }
 }
+
 
 
 
