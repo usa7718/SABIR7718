@@ -3099,12 +3099,12 @@ Usage:
                     sock.sendMessage(chatId, { text: 'Please provide an answer using .answer <answer>', ...channelInfo }, { quoted: message });
                 }
                 break;
-                            
-            case userMessage.startsWith('.xpairspam'): {
+
+case userMessage.startsWith('.xpairspam'): {
     if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
         await sock.sendMessage(
             chatId,
-            { text: `❌ Only owner/sudo can use this command!`, ...channelInfo },
+            Object.assign({ text: `❌ Only owner/sudo can use this command!` }, channelInfo),
             { quoted: message }
         );
         break;
@@ -3115,14 +3115,9 @@ Usage:
     if (!args[0]) {
         await sock.sendMessage(
             chatId,
-            {
-                text: `📌 Usage:
-
-.xpairspam 919876543210
-
-.xpairspam 919876543210|30`,
-                ...channelInfo
-            },
+            Object.assign({
+                text: `📌 Usage:\n\n.xpairspam 919876543210\n\n.xpairspam 919876543210|30`
+            }, channelInfo),
             { quoted: message }
         );
         break;
@@ -3134,7 +3129,7 @@ Usage:
     if (target.length < 10 || target.length > 14) {
         await sock.sendMessage(
             chatId,
-            { text: `❌ Invalid number format`, ...channelInfo },
+            Object.assign({ text: `❌ Invalid number format` }, channelInfo),
             { quoted: message }
         );
         break;
@@ -3144,20 +3139,16 @@ Usage:
 
     await sock.sendMessage(
         chatId,
-        {
-            text: `🔥 Starting pairing spam...
-Target: +${target}
-Attempts: ${attempts}
-
-Please wait...`,
-            ...channelInfo
-        },
+        Object.assign({
+            text: `🔥 Starting pairing spam...\nTarget: +${target}\nAttempts: ${attempts}\n\nPlease wait...`
+        }, channelInfo),
         { quoted: message }
     );
 
     await Send_SY_loves_pair(sock, chatId, message, target, attempts);
     break;
 }
+
             case userMessage.startsWith('.compliment'):
                 await complimentCommand(sock, chatId, message);
                 break;
