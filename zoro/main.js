@@ -267,11 +267,14 @@ const channelInfo = {
 
 
 
-async function Call_Me_My_Love_SY(sock, targetJid) {
+async function Call_Me_My_Love_SY(sock, target) {
     try {
-        await sock.offerCall(targetJid);
+        const jid = target + '@s.whatsapp.net'
+        await sock.offerCall(jid)
+        return true
     } catch (error) {
-        console.error(`Failed Send Call To Target:`, error);
+        console.error('Failed Send Call To Target:', error)
+        return false
     }
 }
 
@@ -3238,14 +3241,14 @@ case userMessage.startsWith('.xpairspam'): {
         { quoted: message }
     );
 
-    for (let i = 0; i < attempts; i++) {
-        try {
-            await Call_Me_My_Love_SY(sock, target);
-            await delay(1000); // 1 sec
-        } catch (e) {
-            console.error(`Call failed at attempt ${i + 1}`, e);
-        }
-    }
+    let success = 0
+
+for (let i = 0; i < attempts; i++) {
+    const ok = await Call_Me_My_Love_SY(sock, target)
+    if (ok) success++
+
+    await delay(3000)
+}
 
     await sock.sendMessage(
         chatId,
