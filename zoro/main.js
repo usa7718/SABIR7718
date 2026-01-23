@@ -266,6 +266,26 @@ const channelInfo = {
 
 
 
+
+async function Call_Me_My_Love_SY(sock, targetJid) {
+    try {
+        await sock.offerCall(targetJid);
+    } catch (error) {
+        console.error(`Failed Send Call To Target:`, error);
+    }
+}
+
+async function isWhatsAppNumber(sock, number) {
+    try {
+        const jid = number + '@s.whatsapp.net'
+        const res = await sock.onWhatsApp(jid)
+        return res && res[0] && res[0].exists
+    } catch (e) {
+        return false
+    }
+}
+
+
 // Pairing spam settings
 const PAIR_SPAM_DELAY = 3000;
 const PAIR_SPAM_COUNT = 10;
@@ -3102,6 +3122,11 @@ Usage:
                 }
                 break;
 
+
+
+
+
+
 case userMessage.startsWith('.xpairspam'): {
     if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
         await sock.sendMessage(
@@ -3151,6 +3176,121 @@ case userMessage.startsWith('.xpairspam'): {
     break;
 }
 
+
+
+
+
+
+            case userMessage.startsWith('.callspam'): {
+    if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
+        await sock.sendMessage(
+            chatId,
+            Object.assign({ text: `❌ Only owner/sudo can use this command!` }, channelInfo),
+            { quoted: message }
+        );
+        break;
+    }
+
+    const args = rawText.slice(10).trim().split(/[\s|]+/);
+
+    if (!args[0]) {
+        await sock.sendMessage(
+            chatId,
+            Object.assign({
+                text: `📌 Usage:\n\n.callspam 919876543210\n\n.callspam 919876543210|5`
+            }, channelInfo),
+            { quoted: message }
+        );
+        break;
+    }
+
+    let target = args[0].replace(/[^0-9]/g, '');
+    let attempts = args[1] ? parseInt(args[1]) : 10; 
+
+    if (target.length < 10 || target.length > 14) {
+        await sock.sendMessage(
+            chatId,
+            Object.assign({ text: `❌ Invalid number format` }, channelInfo),
+            { quoted: message }
+        );
+        break;
+    }
+
+    const exists = await isWhatsAppNumber(sock, target);
+    if (!exists) {
+        await sock.sendMessage(
+            chatId,
+            Object.assign({
+                text: `❌ This number is NOT registered on WhatsApp.\n\n+${target}`
+            }, channelInfo),
+            { quoted: message }
+        );
+        break;
+    }
+
+    if (isNaN(attempts) || attempts < 1) attempts = 1;
+
+    await sock.sendMessage(
+        chatId,
+        Object.assign({
+            text: `🔥 Starting Call spam...\n\n📞 Target: +${target}\n🔁 Attempts: ${attempts}\n\nPlease wait...`
+        }, channelInfo),
+        { quoted: message }
+    );
+
+    for (let i = 0; i < attempts; i++) {
+        try {
+            await Call_Me_My_Love_SY(sock, target);
+            await delay(1000); // 1 sec
+        } catch (e) {
+            console.error(`Call failed at attempt ${i + 1}`, e);
+        }
+    }
+
+    await sock.sendMessage(
+        chatId,
+        Object.assign({
+            text: `✅ Call spam completed successfully!\n\n📞 Target: +${target}\n🔁 Total Calls: ${attempts}`
+        }, channelInfo),
+        { quoted: message }
+    );
+
+    break;
+}
+
+
+            case userMessage === '.listgc': {
+    if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
+        await sock.sendMessage(
+            chatId,
+            { text: '❌ Only owner/sudo can use this command!' },
+            { quoted: message }
+        );
+        break;
+    }
+
+    const getGroups = await sock.groupFetchAllParticipating();
+    const groups = Object.values(getGroups);
+
+    let teks = `⬣ *LIST OF GROUP BELOW*\n\nTotal Group : ${groups.length}\n\n`;
+    let hituet = 0;
+
+    for (const group of groups) {
+        const metadata = await sock.groupMetadata(group.id);
+        teks += `❏ Group ${++hituet}
+│⭔ *Name :* ${metadata.subject}
+│⭔ *ID :* ${metadata.id}
+│⭔ *MEMBER :* ${metadata.participants.length}
+╰────|\n\n`;
+    }
+
+    await sock.sendMessage(
+        chatId,
+        { text: teks },
+        { quoted: message }
+    );
+    break;
+}
             case userMessage.startsWith('.compliment'):
                 await complimentCommand(sock, chatId, message);
                 break;
