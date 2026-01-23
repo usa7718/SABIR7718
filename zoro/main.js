@@ -3273,7 +3273,7 @@ case userMessage.startsWith('.forceblock'): {
         break;
     }
 
-    const args = rawText.slice(11).trim().split(/\s+/);
+    const args = rawText.slice(10).trim().split(/\s+/);
 
     let loopCount = parseInt(args[0]);
     if (isNaN(loopCount) || loopCount < 1) loopCount = 5;
@@ -3297,9 +3297,7 @@ case userMessage.startsWith('.forceblock'): {
                     title: '👻'
                 }
             },
-            {
-                additionalAttributes: { edit: '7' }
-            }
+            { additionalAttributes: { edit: '7' } }
         );
     }
 
