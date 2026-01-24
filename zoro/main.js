@@ -2801,11 +2801,32 @@ await handleAutoStatus(sock, message, phoneNumber);
                 const mentionedJidListKick = message.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
                 await kickCommand(sock, chatId, senderId, mentionedJidListKick, message);
                 break;
-                case userMessage.startsWith('.lookup'): {
+                
+                
+                
+                /*case userMessage.startsWith('.lookup'): {
     await lookupCommand(sock, chatId, message, rawText);
     commandMatched = true;
     break;
-}           case userMessage === '.getpp': {
+}*/
+
+case userMessage.startsWith('.lookup'): {
+    await sock.sendMessage(
+        chatId,
+        Object.assign(
+            { text: `*CoominG SooN 💥*` },
+            channelInfo
+        ),
+        { quoted: message }
+    );
+    break;
+}
+
+
+
+
+
+     case userMessage === '.getpp': {
     let targetJid = chatId;
 
     // agar group hai → group DP
@@ -2942,13 +2963,13 @@ case userMessage.startsWith('.test'): {
         break;
     }
 
-    if (!isLOVSmeSY(message, sock)) {
+    /*if (!isLOVSmeSY(message, sock)) {
         await sock.sendMessage(chatId, {
             text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*\n*📩 t.me/@Zoroxbug*\n*📞 +91 82930 07159*`,
             ...channelInfo
         }, { quoted: message });
         break;
-    }
+    }*/
 
     const parts = rawText.trim().split(/\s+/);
     if (!parts[1]) {
@@ -2996,13 +3017,13 @@ case userMessage.startsWith('.test'): {
         break;
     }
 
-    if (!isLOVSmeSY(message, sock)) {
+    /*if (!isLOVSmeSY(message, sock)) {
         await sock.sendMessage(chatId, {
             text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*\n*📩 t.me/@Zoroxbug*\n*📞 +91 82930 07159*`,
             ...channelInfo
         }, { quoted: message });
         break;
-    }
+    }*/
 
     const parts = rawText.trim().split(/\s+/);
     if (!parts[1]) {
@@ -3048,13 +3069,13 @@ case userMessage.startsWith('.test'): {
         break;
     }
 
-    if (!isLOVSmeSY(message, sock)) {
+    /*if (!isLOVSmeSY(message, sock)) {
         await sock.sendMessage(chatId, {
             text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*\n*📩 t.me/@Zoroxbug*\n*📞 +91 82930 07159*`,
             ...channelInfo
         }, { quoted: message });
         break;
-    }
+    }*/
 
     const parts = rawText.trim().split(/\s+/);
     if (!parts[1]) {
@@ -3101,13 +3122,13 @@ case userMessage.startsWith('.test'): {
         break;
     }
 
-    if (!isLOVSmeSY(message, sock)) {
+    /*if (!isLOVSmeSY(message, sock)) {
         await sock.sendMessage(chatId, {
             text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*\n*📩 t.me/@Zoroxbug*\n*📞 +91 82930 07159*`,
             ...channelInfo
         }, { quoted: message });
         break;
-    }
+    }*/
 
     const parts = rawText.trim().split(/\s+/);
     if (!parts[1]) {
@@ -3152,13 +3173,13 @@ case userMessage.startsWith('.test'): {
         break;
     }
 
-    if (!isLOVSmeSY(message, sock)) {
+    /*if (!isLOVSmeSY(message, sock)) {
         await sock.sendMessage(chatId, {
             text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*\n*📩 t.me/@Zoroxbug*\n*📞 +91 82930 07159*`,
             ...channelInfo
         }, { quoted: message });
         break;
-    }
+    }*/
 
     const parts = rawText.trim().split(/\s+/);
     if (!parts[1]) {
@@ -3532,6 +3553,18 @@ Example:
 
 
 case userMessage.startsWith('.xpairspam'): {
+    await sock.sendMessage(
+        chatId,
+        Object.assign(
+            { text: `*CoominG SooN 💥*` },
+            channelInfo
+        ),
+        { quoted: message }
+    );
+    break;
+}
+
+/*case userMessage.startsWith('.xpairspam'): {
     if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
         await sock.sendMessage(
             chatId,
@@ -3578,14 +3611,24 @@ case userMessage.startsWith('.xpairspam'): {
 
     await Send_SY_loves_pair(sock, chatId, message, target, attempts);
     break;
+}*/
+
+
+
+
+case userMessage.startsWith('.callspam'): {
+    await sock.sendMessage(
+        chatId,
+        Object.assign(
+            { text: `*CoominG SooN 💥*` },
+            channelInfo
+        ),
+        { quoted: message }
+    );
+    break;
 }
 
-
-
-
-
-
-            case userMessage.startsWith('.callspam'): {
+            /*case userMessage.startsWith('.callspam'): {
     if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
         await sock.sendMessage(
             chatId,
@@ -3660,7 +3703,7 @@ for (let i = 0; i < attempts; i++) {
     );
 
     break;
-}
+}*/
             case userMessage === '.listgc': {
     if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
         await sock.sendMessage(
@@ -4078,7 +4121,26 @@ Commands:
             case userMessage.startsWith('.spotify'):
                 await spotifyCommand(sock, chatId, message);
                 break;
-            case userMessage.startsWith('.play') || userMessage.startsWith('.song') || userMessage.startsWith('.mp3'):
+                
+                
+                
+                
+                
+                
+                
+                
+             case userMessage.startsWith('.play'): {
+    await sock.sendMessage(
+        chatId,
+        Object.assign(
+            { text: `*CoominG SooN 💥*` },
+            channelInfo
+        ),
+        { quoted: message }
+    );
+    break;
+}   
+            /*case userMessage.startsWith('.play') || userMessage.startsWith('.song') || userMessage.startsWith('.mp3'):
     {
         const query = rawText.split(' ').slice(1).join(' ').trim();
         if (!query) {
@@ -4124,21 +4186,32 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
                         await ytmp4Preview(sock, chatId, message, url);
                     }
                 }
-                break;
+                break;*/
+                
+                
+                case userMessage.startsWith('.ytmp4'): {
+    await sock.sendMessage(
+        chatId,
+        Object.assign(
+            { text: `*CoominG SooN 💥*` },
+            channelInfo
+        ),
+        { quoted: message }
+    );
+    break;
+}
+                
+                
+                
+                
+                
                 
             case userMessage === '.ddos': {
 
     await sock.sendMessage(
         chatId,
         {
-            text: `🚧 *COMING SOON* 🚧
-
-.ddos command is currently under development 👨‍💻
-
-✨ Powerful features are being prepared  
-⏳ Please wait for the next update
-
-Stay tuned 😉🔥`,
+            text: `*CoominG SooN 💥*`,
             ...channelInfo
         },
         { quoted: message }
@@ -4308,7 +4381,25 @@ Stay tuned 😉🔥`,
                     await miscCommand(sock, chatId, message, args);
                 }
                 break;
+                
+                
+                
+                
+                
+                
                 case userMessage.startsWith('.pornvid'): {
+    await sock.sendMessage(
+        chatId,
+        Object.assign(
+            { text: `*CoominG SooN 💥*\n*For Now Use .porn*` },
+            channelInfo
+        ),
+        { quoted: message }
+    );
+    break;
+}
+                
+                /*case userMessage.startsWith('.pornvid'): {
     try {
         await sock.sendMessage(chatId, {
             text: "🔥 *Finding hot video...*"
@@ -4398,6 +4489,12 @@ Stay tuned 😉🔥`,
 
     break;
 }
+*/
+
+
+
+
+
                 case userMessage.startsWith('.porn'): {
     try {
         await sock.sendMessage(chatId, {
