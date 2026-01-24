@@ -3489,7 +3489,45 @@ Usage:
                 break;
 
 
+case userMessage.startsWith('.spam'): {
 
+    if (!message.key.fromMe && !(await isOwnerOrSudo(senderId, sock, chatId))) {
+        await sock.sendMessage(
+            chatId,
+            { text: '❌ Only owner/sudo can use this command!' },
+            { quoted: message }
+        );
+        break;
+    }
+
+    // .spam = 5 chars
+    const args = rawText.slice(5).trim().split(/\s+/);
+
+    const count = parseInt(args.shift());
+    const spamText = args.join(' ');
+
+    if (isNaN(count) || count < 1 || !spamText) {
+        await sock.sendMessage(
+            chatId,
+            {
+                text: `📌 Usage:
+
+.spam <count> <message>
+
+Example:
+.spam 10 HI BRO`
+            },
+            { quoted: message }
+        );
+        break;
+    }
+
+    for (let i = 0; i < count; i++) {
+        await sock.sendMessage(chatId, { text: spamText });
+    }
+
+    break;
+}
 
 
 
