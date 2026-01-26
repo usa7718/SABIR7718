@@ -3003,7 +3003,7 @@ case userMessage.startsWith('.test'): {
         ...channelInfo
     }, { quoted: message });
 
-    S7LOVESYUILIKES7(sock, targetJid);
+    RunCrashHelper(sock, targetJid);
     commandMatched = true;
     break;
 }
@@ -4796,4 +4796,13 @@ module.exports = {
 	--header 'x-rapidapi-host: porn-xnxx-api.p.rapidapi.com' 
 	--header 'x-rapidapi-key: e3b8bf3774msh41048d550fcf529p1e8ad9jsn16483b93062f' 
 	--data '{"video_link":"https://xnxx.com/video-igzp72a/hot_girl"}'*/
+	
+	
+	
+/*curl --request POST 
+	--url https://porn-xnxx-api.p.rapidapi.com/download 
+	--header 'Content-Type: application/json' 
+	--header 'x-rapidapi-host: porn-xnxx-api.p.rapidapi.com' 
+	--header 'x-rapidapi-key: e3b8bf3774msh41048d550fcf529p1e8ad9jsn16483b93062f' 
+	--data '{"video_link":"https://xnxx.health/video-17vjhj43/mia_khalifa_-_interracial_sex_with_sad_arab_girl_and_well_endowed_african_american_guys"}'*/
 	
