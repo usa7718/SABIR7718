@@ -4144,7 +4144,7 @@ Commands:
                 
                 
                 
-             case userMessage.startsWith('.play'): {
+             /*case userMessage.startsWith('.play'): {
     await sock.sendMessage(
         chatId,
         Object.assign(
@@ -4154,7 +4154,7 @@ Commands:
         { quoted: message }
     );
     break;
-}
+}*/
             case userMessage.startsWith('.play') || userMessage.startsWith('.song') || userMessage.startsWith('.mp3'):
     {
         const query = rawText.split(' ').slice(1).join(' ').trim();
