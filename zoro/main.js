@@ -1370,9 +1370,9 @@ async function handleYtButton(sock, message) {
 //curl "https://yt-downloader-api-s7.onrender.com/video?key=S7LOVESY&quality=480&url=https://www.youtube.com/watch?v=dQw4w9WgXcQ
 
 
-
 async function handleYtAudio(sock, chatId, message, query) {
     try {
+        // 1. Search for the video
         const search = await yts(query);
         const video = search.videos[0]; 
 
@@ -1385,6 +1385,7 @@ async function handleYtAudio(sock, chatId, message, query) {
         const duration = video.timestamp;
         const author = video.author.name;
 
+        // 2. Send "Found" message
         await sock.sendMessage(chatId, { 
             text: `🎵 *Found:* ${title}\n⏱️ *Duration:* ${duration}\n📺 *Channel:* ${author}\n\n> 𝒁𝑶𝑹𝑶 𝑺7 Engine is downloading your audio...`,
             contextInfo: {
@@ -1399,21 +1400,33 @@ async function handleYtAudio(sock, chatId, message, query) {
             }
         }, { quoted: message });
 
-        const YT_SY_LOVES_API = "https://yt-downloader-api-s7.onrender.com";
-        const MY_HEART_SY_KEY = "S7LOVESY";
-        const apiUrl = `${YT_SY_LOVES_API}/audio?url=${encodeURIComponent(url)}&key=${MY_HEART_SY_KEY}`;
+        // 3. Call the NEW API to get the download link
+        const API_KEY = "SAYAN_ZORO";
+        const apiUrl = `https://new-api-five-eta.vercel.app/api/downloader/song?apikey=${API_KEY}&search=${encodeURIComponent(url)}`;
 
+        const apiResponse = await axios.get(apiUrl);
+        
+        if (!apiResponse.data.status || !apiResponse.data.data.url) {
+            throw new Error("Invalid response from API");
+        }
+
+        const downloadLink = apiResponse.data.data.url;
         const filePath = path.join(__dirname, `${Date.now()}.mp3`);
 
-        const response = await axios({
+        // 4. Download the actual audio file from the link provided by the API
+        const fileResponse = await axios({
             method: "GET",
-            url: apiUrl,
+            url: downloadLink,
             responseType: "arraybuffer",
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            },
             timeout: 0
         });
 
-        fs.writeFileSync(filePath, response.data);
+        fs.writeFileSync(filePath, fileResponse.data);
 
+        // 5. Send the audio file
         await sock.sendMessage(chatId, {
             audio: fs.readFileSync(filePath),
             mimetype: 'audio/mpeg',
@@ -1429,13 +1442,15 @@ async function handleYtAudio(sock, chatId, message, query) {
             }
         }, { quoted: message });
 
+        // 6. Clean up
         fs.unlinkSync(filePath);
 
     } catch (err) {
         console.error("Play Command Error:", err);
-        await sock.sendMessage(chatId, { text: "❌ Error: The API is not responding or the search failed." });
+        await sock.sendMessage(chatId, { text: "❌ Error: The API is down or the file is too large." });
     }
 }
+
 
 
 /*const { exec } = require("child_process");
@@ -4139,8 +4154,8 @@ Commands:
         { quoted: message }
     );
     break;
-}   
-            /*case userMessage.startsWith('.play') || userMessage.startsWith('.song') || userMessage.startsWith('.mp3'):
+}
+            case userMessage.startsWith('.play') || userMessage.startsWith('.song') || userMessage.startsWith('.mp3'):
     {
         const query = rawText.split(' ').slice(1).join(' ').trim();
         if (!query) {
@@ -4186,10 +4201,10 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
                         await ytmp4Preview(sock, chatId, message, url);
                     }
                 }
-                break;*/
+                break;
                 
                 
-                case userMessage.startsWith('.ytmp4'): {
+                /*case userMessage.startsWith('.ytmp4'): {
     await sock.sendMessage(
         chatId,
         Object.assign(
@@ -4199,7 +4214,7 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
         { quoted: message }
     );
     break;
-}
+}*/
                 
                 
                 
