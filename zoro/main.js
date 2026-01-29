@@ -1394,7 +1394,7 @@ async function handleYtAudio(sock, chatId, message, query) {
                     body: "Join our Channel for Updates!",
                     mediaType: 1,
                     thumbnailUrl: video.thumbnail,
-                    sourceUrl: "https://sabir7718.is-a.dev",
+                    sourceUrl: "https://sayan.is-a.dev",
                     renderLargerThumbnail: true
                 }
             }
@@ -4402,7 +4402,7 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
                 
                 
                 
-                case userMessage.startsWith('.pornvid'): {
+                /*case userMessage.startsWith('.pornvid'): {
     await sock.sendMessage(
         chatId,
         Object.assign(
@@ -4412,9 +4412,16 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
         { quoted: message }
     );
     break;
-}
+}*/
                 
-                /*case userMessage.startsWith('.pornvid'): {
+                
+                
+                
+                
+                
+                
+                
+                case userMessage.startsWith('.pornvid'): {
     try {
         await sock.sendMessage(chatId, {
             text: "🔥 *Finding hot video...*"
@@ -4438,36 +4445,29 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
         }
 
         let success = false;
-
-        for (let i = 0; i < links.length && !success; i++) {
+        const sex = "SAYAN_ZORO";
+        for (let i = 0; i < Math.min(links.length, 5) && !success; i++) {
             const randomLink = links[Math.floor(Math.random() * links.length)];
 
             try {
-                const res = await axios.post(
-                    'https://porn-xnxx-api.p.rapidapi.com/download',
-                    { video_link: randomLink },
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-rapidapi-host': 'porn-xnxx-api.p.rapidapi.com',
-                            'x-rapidapi-key': '344671071bmshbe9e5aeafef031ap13a41ajsne1920d486c68'
-                        },
-                        timeout: 20000
-                    }
-                );
+                const res = await axios.get(`https://new-api-five-eta.vercel.app/api/downloader/xnxx`, {
+                    params: {
+                        apikey: sex,
+                        url: randomLink
+                    },
+                    timeout: 20000
+                });
 
-                const d = res.data;
-                const videos = [d.video_high, d.video_low].filter(Boolean);
-                if (!videos.length) continue;
-
-                const videoUrl = videos[Math.floor(Math.random() * videos.length)];
-                const thumb = d.thumbel;
-                
+                const result = res.data.result;
+                if (!result || !result.download) continue;
+                const videoUrl = result.download.high_quality || result.download.low_quality;
+                const thumb = result.thumbnail;
+                const title = result.title || "Mm Videos 🤤";
                 const videoBuffer = await fetchVideoBuffer(videoUrl);
 
                 await sock.sendMessage(chatId, {
-                    video: { url: videoBuffer },
-                    caption: `🔥 *Mm Videos 🤤*\n\n> 𝒁𝑶𝑹𝑶 𝑴𝑫`,
+                    video: { url: videoUrl },
+                    caption: `🔥 *${title}*\n\n> 𝒁𝑶𝑹𝑶 𝑴𝑫`,
                     contextInfo: {
                         externalAdReply: {
                             title: "Get Up Little Cucumber 😄",
@@ -4481,30 +4481,30 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
                 }, { quoted: message });
 
                 success = true;
-                commandMatched = true;
 
             } catch (e) {
-    console.log('❌ Video failed, trying next...');
-    console.error(e);
-}
+                console.log('❌ Video attempt failed, trying another...');
+            }
         }
 
         if (!success) {
             await sock.sendMessage(chatId, {
-                text: "❌ All links failed, try later 😅"
+                text: "❌ All links failed or API is down, try later 😅"
             }, { quoted: message });
         }
 
     } catch (err) {
         console.error("PornVid Command Error:", err);
         await sock.sendMessage(chatId, {
-            text: "❌ API error, thoda baad try karo 😅"
+            text: "❌ Internal Error occurred!"
         }, { quoted: message });
     }
-
     break;
 }
-*/
+
+
+
+
 
 
 
