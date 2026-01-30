@@ -1387,7 +1387,7 @@ async function handleYtAudio(sock, chatId, message, query) {
 
         // 2. Send "Found" message
         await sock.sendMessage(chatId, { 
-            text: `🎵 *Found:* ${title}\n⏱️ *Duration:* ${duration}\n📺 *Channel:* ${author}\n\n> 𝒁𝑶𝑹𝑶 𝑺7 Engine is downloading your audio...`,
+            text: `🎵 *Found:* ${title}\n⏱️ *Duration:* ${duration}\n📺 *Channel:* ${author}\n\n> *Zoro-Md Is DownloadinG Your Audio*`,
             contextInfo: {
                 externalAdReply: {
                     title: "𝒁𝑶𝑹𝑶 𝑨𝑼𝑫𝑰𝑶 𝑷𝑳𝑨𝒀𝑬𝑹",
@@ -1436,7 +1436,7 @@ async function handleYtAudio(sock, chatId, message, query) {
                     title: title,
                     body: "✅ Successful, 𝒁𝑶𝑹𝑶 𝒙 𝑺7",
                     thumbnailUrl: video.thumbnail,
-                    sourceUrl: "https://sabir7718.is-a.dev", 
+                    sourceUrl: "https://sayan.is-a.dev", 
                     mediaType: 1
                 }
             }
