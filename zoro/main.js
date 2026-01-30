@@ -4166,7 +4166,7 @@ Commands:
     }
     break;
 
-                                        Case userMessage.startsWith('.ytmp4'):
+                                        case userMessage.startsWith('.ytmp4'):
     {
         const text = rawText.slice(6).trim();
         const url = text.split(' ')[0];
