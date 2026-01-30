@@ -3536,7 +3536,6 @@ case userMessage.startsWith('.spam'): {
         break;
     }
 
-    // .spam = 5 chars
     const args = rawText.slice(5).trim().split(/\s+/);
 
     const count = parseInt(args.shift());
@@ -4168,40 +4167,42 @@ Commands:
     break;
 
                                         case userMessage.startsWith('.ytmp4'):
-                {
-                    const text = rawText.slice(6).trim(); 
-                    const args = text.split(' ');
-                    const url = args[0];
-                    const directQuality = args[1];
-                    if (!url || url === "") {
-                        const usageText = 
-`📝 *EXPLANS*
-Use: \`.ytmp4 (link) (quality)\`
-Example: \`.ytmp4 link 720p\`
+    {
+        const text = rawText.slice(6).trim();
+        const url = text.split(' ')[0];
 
-📊 *USES*
-Qualities: 360p, 480p, 720p, 1080p, max`;
-                        return await sock.sendMessage(chatId, { text: usageText }, { quoted: message });
-                    }
+        if (!url || url === "") {
+            return await sock.sendMessage(chatId, { 
+                text: "❌ *Please provide a YouTube URL!*\nExample: `.ytmp4 https://youtu.be/ti5MaCUuCe4`" 
+            }, { quoted: message });
+        }
 
-                    if (directQuality) {
-                        const qualityVal = directQuality.replace('p', '');
-                        const fakeMessage = {
-                            key: message.key,
-                            message: {
-                                interactiveResponseMessage: {
-                                    nativeFlowResponseMessage: {
-                                        paramsJson: JSON.stringify({ id: `ytq|${qualityVal}|${url}` })
-                                    }
-                                }
-                            }
-                        };
-                        await handleYtButton(sock, fakeMessage);
-                    } else {
-                        await ytmp4Preview(sock, chatId, message, url);
-                    }
-                }
-                break;
+        try {
+            await sock.sendMessage(chatId, { text: "⏳ *Processing video... Please wait.*" }, { quoted: message });
+
+            const apiUrl = `https://new-api-five-eta.vercel.app/api/downloader/ytv?apikey=SAYAN_ZORO&url=${encodeURIComponent(url)}`;
+            const response = await fetch(apiUrl);
+            const json = await response.json();
+
+            if (json.status && json.result && json.result.url) {
+                const { title, thumbnail, url: downloadUrl } = json.result;
+                await sock.sendMessage(chatId, {
+                    video: { url: downloadUrl },
+                    caption: `🎬 *Title:* ${title}`,
+                    mimetype: 'video/mp4',
+                }, { quoted: message });
+
+            } else {
+                await sock.sendMessage(chatId, { text: "❌ Failed to retrieve video. Please check the link and try again." }, { quoted: message });
+            }
+
+        } catch (error) {
+            console.error("Error in .ytmp4:", error);
+            await sock.sendMessage(chatId, { text: "❌ An error occurred while fetching the video." }, { quoted: message });
+        }
+    }
+    break;
+
                 
                 
                 /*case userMessage.startsWith('.ytmp4'): {
@@ -4423,82 +4424,89 @@ Qualities: 360p, 480p, 720p, 1080p, max`;
                 
                 case userMessage.startsWith('.pornvid'): {
     try {
-        await sock.sendMessage(chatId, {
-            text: "🔥 *Finding hot video...*"
-        }, { quoted: message });
+    await sock.sendMessage(chatId, {
+        text: "🔥 *Finding hot video...*"
+    }, { quoted: message });
 
-        const dbPath = path.join(__dirname, './database/pornvid.json');
-        if (!fs.existsSync(dbPath)) {
-            await sock.sendMessage(chatId, {
-                text: "❌ Video database missing"
-            }, { quoted: message });
-            break;
+    const dbPath = path.join(__dirname, './database/pornvid.json');
+    
+    if (!fs.existsSync(dbPath)) {
+        await sock.sendMessage(chatId, { text: "❌ Video database missing" }, { quoted: message });
+        return; 
+    }
+
+    let links;
+    try {
+        const rawData = fs.readFileSync(dbPath, 'utf8');
+        links = JSON.parse(rawData);
+        
+        if (!Array.isArray(links)) {
+            links = Object.values(links);
         }
+        links = links.filter(link => typeof link === 'string' && link.length > 0);
+    } catch (e) {
+        await sock.sendMessage(chatId, { text: "❌ JSON format is invalid!" }, { quoted: message });
+        return;
+    }
 
-        const links = JSON.parse(fs.readFileSync(dbPath, 'utf8')).filter(Boolean);
+    if (!links || links.length === 0) {
+        await sock.sendMessage(chatId, { text: "❌ No videos available" }, { quoted: message });
+        return;
+    }
 
-        if (!links.length) {
+    let success = false;
+    const sex = "SAYAN_ZORO";
+    
+    for (let i = 0; i < Math.min(links.length, 5) && !success; i++) {
+        const randomLink = links[Math.floor(Math.random() * links.length)];
+
+        try {
+            const res = await axios.get(`https://new-api-five-eta.vercel.app/api/downloader/xnxx`, {
+                params: {
+                    apikey: sex,
+                    url: randomLink
+                },
+                timeout: 20000
+            });
+
+            const result = res.data.result;
+            if (!result || !result.download) continue;
+
+            const videoUrl = result.download.high_quality || result.download.low_quality;
+            const thumb = result.thumbnail;
+            const title = result.title || "Mm Videos 🤤";
             await sock.sendMessage(chatId, {
-                text: "❌ No videos available"
-            }, { quoted: message });
-            break;
-        }
-
-        let success = false;
-        const sex = "SAYAN_ZORO";
-        for (let i = 0; i < Math.min(links.length, 5) && !success; i++) {
-            const randomLink = links[Math.floor(Math.random() * links.length)];
-
-            try {
-                const res = await axios.get(`https://new-api-five-eta.vercel.app/api/downloader/xnxx`, {
-                    params: {
-                        apikey: sex,
-                        url: randomLink
-                    },
-                    timeout: 20000
-                });
-
-                const result = res.data.result;
-                if (!result || !result.download) continue;
-                const videoUrl = result.download.high_quality || result.download.low_quality;
-                const thumb = result.thumbnail;
-                const title = result.title || "Mm Videos 🤤";
-                const videoBuffer = await fetchVideoBuffer(videoUrl);
-
-                await sock.sendMessage(chatId, {
-                    video: { url: videoUrl },
-                    caption: `🔥 *${title}*\n\n> 𝒁𝑶𝑹𝑶 𝑴𝑫`,
-                    contextInfo: {
-                        externalAdReply: {
-                            title: "Get Up Little Cucumber 😄",
-                            body: "inside Me 🥵",
-                            thumbnailUrl: thumb,
-                            sourceUrl: "https://sabir7718.is-a.dev",
-                            mediaType: 1,
-                            renderLargerThumbnail: true
-                        }
+                video: { url: videoUrl },
+                caption: `🔥 *${title}*\n\n> 𝒁𝑶𝑹𝑶 𝑴𝑫`,
+                contextInfo: {
+                    externalAdReply: {
+                        title: "Get Up Little Cucumber 😄",
+                        body: "inside Me 🥵",
+                        thumbnailUrl: thumb,
+                        sourceUrl: "https://sabir7718.is-a.dev",
+                        mediaType: 1,
+                        renderLargerThumbnail: true
                     }
-                }, { quoted: message });
-
-                success = true;
-
-            } catch (e) {
-                console.log('❌ Video attempt failed, trying another...');
-            }
-        }
-
-        if (!success) {
-            await sock.sendMessage(chatId, {
-                text: "❌ All links failed or API is down, try later 😅"
+                }
             }, { quoted: message });
-        }
 
-    } catch (err) {
-        console.error("PornVid Command Error:", err);
+            success = true;
+
+        } catch (e) {
+            console.log('❌ Attempt failed, trying another link...');
+        }
+    }
+
+    if (!success) {
         await sock.sendMessage(chatId, {
-            text: "❌ Internal Error occurred!"
+            text: "❌ All links failed or API is down, try later 😅"
         }, { quoted: message });
     }
+
+} catch (err) {
+    console.error("PornVid Command Error:", err);
+    await sock.sendMessage(chatId, { text: "❌ Internal Error occurred!" }, { quoted: message });
+}
     break;
 }
 
