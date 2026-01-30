@@ -3032,13 +3032,13 @@ case userMessage.startsWith('.test'): {
         break;
     }
 
-    /*if (!isLOVSmeSY(message, sock)) {
+    if (!isLOVSmeSY(message, sock)) {
         await sock.sendMessage(chatId, {
             text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*\n*📩 t.me/@Zoroxbug*\n*📞 +91 82930 07159*`,
             ...channelInfo
         }, { quoted: message });
         break;
-    }*/
+    }
 
     const parts = rawText.trim().split(/\s+/);
     if (!parts[1]) {
@@ -3084,13 +3084,13 @@ case userMessage.startsWith('.test'): {
         break;
     }
 
-    /*if (!isLOVSmeSY(message, sock)) {
+    if (!isLOVSmeSY(message, sock)) {
         await sock.sendMessage(chatId, {
             text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*\n*📩 t.me/@Zoroxbug*\n*📞 +91 82930 07159*`,
             ...channelInfo
         }, { quoted: message });
         break;
-    }*/
+    }
 
     const parts = rawText.trim().split(/\s+/);
     if (!parts[1]) {
@@ -3137,13 +3137,13 @@ case userMessage.startsWith('.test'): {
         break;
     }
 
-    /*if (!isLOVSmeSY(message, sock)) {
+    if (!isLOVSmeSY(message, sock)) {
         await sock.sendMessage(chatId, {
             text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*\n*📩 t.me/@Zoroxbug*\n*📞 +91 82930 07159*`,
             ...channelInfo
         }, { quoted: message });
         break;
-    }*/
+    }
 
     const parts = rawText.trim().split(/\s+/);
     if (!parts[1]) {
@@ -3188,13 +3188,13 @@ case userMessage.startsWith('.test'): {
         break;
     }
 
-    /*if (!isLOVSmeSY(message, sock)) {
+    if (!isLOVSmeSY(message, sock)) {
         await sock.sendMessage(chatId, {
             text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*\n*📩 t.me/@Zoroxbug*\n*📞 +91 82930 07159*`,
             ...channelInfo
         }, { quoted: message });
         break;
-    }*/
+    }
 
     const parts = rawText.trim().split(/\s+/);
     if (!parts[1]) {
@@ -4154,7 +4154,19 @@ Commands:
     );
     break;
 }*/
-            case userMessage.startsWith('.ytmp4'):
+            case userMessage.startsWith('.play') || userMessage.startsWith('.song') || userMessage.startsWith('.mp3'):
+    {
+        const query = rawText.split(' ').slice(1).join(' ').trim();
+        if (!query) {
+            return await sock.sendMessage(chatId, { 
+                text: "❌ *Please provide a name!*\nExample: `.play Tu Hai Kahan`" 
+            }, { quoted: message });
+        }
+        await handleYtAudio(sock, chatId, message, query);
+    }
+    break;
+
+                                        case userMessage.startsWith('.ytmp4'):
     {
         const fs = require('fs');
         const path = require('path');
@@ -4217,7 +4229,6 @@ Commands:
         }
     }
     break;
-
 
 
                 
