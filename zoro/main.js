@@ -4154,20 +4154,12 @@ Commands:
     );
     break;
 }*/
-            case userMessage.startsWith('.play') || userMessage.startsWith('.song') || userMessage.startsWith('.mp3'):
+            case userMessage.startsWith('.ytmp4'):
     {
-        const query = rawText.split(' ').slice(1).join(' ').trim();
-        if (!query) {
-            return await sock.sendMessage(chatId, { 
-                text: "❌ *Please provide a name!*\nExample: `.play Tu Hai Kahan`" 
-            }, { quoted: message });
-        }
-        await handleYtAudio(sock, chatId, message, query);
-    }
-    break;
+        const fs = require('fs');
+        const path = require('path');
+        const axios = require('axios');
 
-                                        case userMessage.startsWith('.ytmp4'):
-    {
         const text = rawText.slice(6).trim();
         const url = text.split(' ')[0];
 
@@ -4183,17 +4175,40 @@ Commands:
             const apiUrl = `https://new-api-five-eta.vercel.app/api/downloader/ytv?apikey=SAYAN_ZORO&url=${encodeURIComponent(url)}`;
             const response = await fetch(apiUrl);
             const json = await response.json();
+
             if (json.status && json.data && json.data.url) {
                 const { title, url: downloadUrl } = json.data;
                 
+                const tempDir = './temp';
+                if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
+                
+                const fileName = `video_${Date.now()}.mp4`;
+                const filePath = path.join(tempDir, fileName);
+
+                await sock.sendMessage(chatId, { text: "📥 *Downloading to server...*" }, { quoted: message });
+
+                const writer = fs.createWriteStream(filePath);
+                const videoResponse = await axios({
+                    url: downloadUrl,
+                    method: 'GET',
+                    responseType: 'stream'
+                });
+
+                videoResponse.data.pipe(writer);
+
+                await new Promise((resolve, reject) => {
+                    writer.on('finish', resolve);
+                    writer.on('error', reject);
+                });
                 await sock.sendMessage(chatId, {
-                    video: { url: downloadUrl },
+                    video: fs.readFileSync(filePath),
                     caption: `🎬 *Title:* ${title}`,
                     mimetype: 'video/mp4',
                 }, { quoted: message });
+                fs.unlinkSync(filePath);
 
             } else {
-                await sock.sendMessage(chatId, { text: "❌ Failed to retrieve video. Please check the link and try again." }, { quoted: message });
+                await sock.sendMessage(chatId, { text: "❌ Failed to retrieve video. Please check the link." }, { quoted: message });
             }
 
         } catch (error) {
@@ -4202,6 +4217,7 @@ Commands:
         }
     }
     break;
+
 
 
                 
