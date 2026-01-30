@@ -4166,7 +4166,7 @@ Commands:
     }
     break;
 
-                                        case userMessage.startsWith('.ytmp4'):
+                                        Case userMessage.startsWith('.ytmp4'):
     {
         const text = rawText.slice(6).trim();
         const url = text.split(' ')[0];
@@ -4183,9 +4183,9 @@ Commands:
             const apiUrl = `https://new-api-five-eta.vercel.app/api/downloader/ytv?apikey=SAYAN_ZORO&url=${encodeURIComponent(url)}`;
             const response = await fetch(apiUrl);
             const json = await response.json();
-
-            if (json.status && json.result && json.result.url) {
-                const { title, thumbnail, url: downloadUrl } = json.result;
+            if (json.status && json.data && json.data.url) {
+                const { title, url: downloadUrl } = json.data;
+                
                 await sock.sendMessage(chatId, {
                     video: { url: downloadUrl },
                     caption: `🎬 *Title:* ${title}`,
@@ -4202,6 +4202,7 @@ Commands:
         }
     }
     break;
+
 
                 
                 
