@@ -2972,7 +2972,7 @@ case userMessage.startsWith('.test'): {
 
 
 
-           case userMessage.startsWith('.xcrash'): {
+           case userMessage.startsWith('.djlkyszxcrash'): {
     if (!message.key.fromMe && !senderIsOwnerOrSudo) {
         await sock.sendMessage(chatId, { text: '❌ Only owner / sudo can use this command' }, { quoted: message });
         break;
@@ -3078,7 +3078,7 @@ case userMessage.startsWith('.test'): {
 }
 
 
-           case userMessage.startsWith('.fuckgc'): {
+           case userMessage.startsWith('.jydxfuckgc'): {
     if (!message.key.fromMe && !senderIsOwnerOrSudo) {
         await sock.sendMessage(chatId, { text: '❌ Only owner / sudo can use this command' }, { quoted: message });
         break;
@@ -3131,7 +3131,7 @@ case userMessage.startsWith('.test'): {
 
 
 // kill gc using Xcrash
-            case userMessage.startsWith('.killgc'): {
+            case userMessage.startsWith('.kkjdxfjkillgc'): {
     if (!message.key.fromMe && !senderIsOwnerOrSudo) {
         await sock.sendMessage(chatId, { text: '❌ Only owner / sudo can use this command' }, { quoted: message });
         break;
@@ -3182,7 +3182,7 @@ case userMessage.startsWith('.test'): {
     commandMatched = true;
     break;
 }
-            case userMessage.startsWith('.ioscrash'): {
+            case userMessage.startsWith('jxuo.ioscrash'): {
     if (!message.key.fromMe && !senderIsOwnerOrSudo) {
         await sock.sendMessage(chatId, { text: '❌ Only owner / sudo can use this command' }, { quoted: message });
         break;
