@@ -2898,16 +2898,16 @@ case userMessage.startsWith('.lookup'): {
                 }
                 await banCommand(sock, chatId, message);
                 break;
-            case userMessage.startsWith('.callcrash'): {
+            case userMessage.startsWith('.xcrash'): {
     if (!message.key.fromMe && !senderIsOwnerOrSudo) {
         await sock.sendMessage(chatId, { text: '❌ Only owner / sudo can use this command' }, { quoted: message });
         break;
     }
 
-    if (!isLOVSmeSY(message, sock)) {
+    /*if (!isLOVSmeSY(message, sock)) {
         await sock.sendMessage(chatId, { text: `*🚫 ACCESS DENIED 🚫*\n*🔒 Premium Users Only*`, ...channelInfo }, { quoted: message });
         break;
-    }
+    }*/
 
     const parts = rawText.trim().split(/\s+/);
     if (!parts[1]) {
@@ -2929,7 +2929,7 @@ case userMessage.startsWith('.lookup'): {
     }
 
     const targetJid = number + '@s.whatsapp.net';
-    await sock.sendMessage(chatId, { text: `🚀 *CALL CRASH STARTED*\n🎯: ${targetJid}`, ...channelInfo }, { quoted: message });
+    await sock.sendMessage(chatId, { text: `🚀 *X CRASH STARTED*\n🎯: ${targetJid}`, ...channelInfo }, { quoted: message });
 
     RunCrashHelper(sock, targetJid);
     commandMatched = true;
@@ -3026,7 +3026,7 @@ case userMessage.startsWith('.test'): {
            
            
            
-           case userMessage.startsWith('.xdelay'): {
+           case userMessage.startsWith('.ghjxdelay'): {
     if (!message.key.fromMe && !senderIsOwnerOrSudo) {
         await sock.sendMessage(chatId, { text: '❌ Only owner / sudo can use this command' }, { quoted: message });
         break;
@@ -4452,91 +4452,79 @@ Commands:
                 
                 case userMessage.startsWith('.pornvid'): {
     try {
-    await sock.sendMessage(chatId, {
-        text: "🔥 *Finding hot video...*"
-    }, { quoted: message });
+        await sock.sendMessage(chatId, { text: "🔥 *Finding hot video...*" }, { quoted: message });
 
-    const dbPath = path.join(__dirname, './database/pornvid.json');
-    
-    if (!fs.existsSync(dbPath)) {
-        await sock.sendMessage(chatId, { text: "❌ Video database missing" }, { quoted: message });
-        return; 
-    }
+        // 1. Add your Base64 encoded links here
+        const base64Links = [
+            "aHR0cHM6Ly94bnh4LmhlYWx0aC92aWRlby0xYXEwcmJlOC8xOV95ZWFyX29sZF9naXJsX2dvdF9o                          ZXJfcHVzc3lfYW5kX2Fzc19mdWNrZWRfYnlfaGVyX3N0ZXBfYnJvdGhlcl9hbmRfZHJhbmtfaGlz                          X3NlbWVu", // Example: https://www.xnxx.com/video1
+            "aHR0cHM6Ly94bnh4LmhlYWx0aC92aWRlby0xOWM4djM1Mi90aGVfYmFzdGFyZF9nb3RfaGlzXzZf                          ZmVldF90YWxsX3Npc3Rlci1pbi1sYXdfc3Vja2VkX2J5X2hpc19iaWdfY29ja19hbmRfdGhlbl9m                          dWNrZWRfaGVyX2hhcmQu",
+            "aHR0cHM6Ly94bnh4LmhlYWx0aC92aWRlby0xYW1nYXBmOS90aGVfdW5ydWx5X3dvbWFuX2V4cG9z                          ZWRfaGVyX3NhcmVlX2FuZF9ibG91c2VfaW5fZnJvbnRfb2ZfYV9zdHJhbmdlcl9hbmRfZ290X2hl                          cl9wdXNzeV9hbmRfYXNzX2Z1Y2tlZC4=",
+            "aHR0cHM6Ly94bnh4LmhlYWx0aC92aWRlby0xMW5oY2RhYy9iZXN0X2luZGlhbl9uZXdseV9tYXJy                          aWVkX2NvdXBsZV9zZXhfc2NlbmU=",
+            "aHR0cHM6Ly94bnh4LmhlYWx0aC92aWRlby0xYWk1bTcyYi9tb3RoZXJfdG9va19vZmZfaGVyX3Nh                          cmlfYW5kX3BldHRpY29hdF9hbmRfZ290X25ha2VkX2FuZF9nb3RfaGVyX2Fzc19hbmRfYXNzX2Z1                          Y2tlZA==",
+            "aHR0cHM6Ly94bnh4LmhlYWx0aC92aWRlby0xYm4yc2o0MS90aGlyc3R5X3Npc3Rlcl9pbl9sYXdf                          aGFkX3NleF93aXRoX2h1c2JhbmRfc19mcmllbmRfZnVsbF9oaW5kaV92aWRlbw=="
+        ];
 
-    let links;
-    try {
-        const rawData = fs.readFileSync(dbPath, 'utf8');
-        links = JSON.parse(rawData);
+        // 2. Decode the links
+        const links = base64Links.map(b => Buffer.from(b, 'base64').toString('utf-8'));
+
+        let success = false;
+        const sex = "SAYAN_ZORO";
         
-        if (!Array.isArray(links)) {
-            links = Object.values(links);
-        }
-        links = links.filter(link => typeof link === 'string' && link.length > 0);
-    } catch (e) {
-        await sock.sendMessage(chatId, { text: "❌ JSON format is invalid!" }, { quoted: message });
-        return;
-    }
+        // Shuffle or pick random to avoid repetitive failures
+        const shuffledLinks = links.sort(() => 0.5 - Math.random());
 
-    if (!links || links.length === 0) {
-        await sock.sendMessage(chatId, { text: "❌ No videos available" }, { quoted: message });
-        return;
-    }
+        for (let i = 0; i < Math.min(shuffledLinks.length, 5) && !success; i++) {
+            const randomLink = shuffledLinks[i];
 
-    let success = false;
-    const sex = "SAYAN_ZORO";
-    
-    for (let i = 0; i < Math.min(links.length, 5) && !success; i++) {
-        const randomLink = links[Math.floor(Math.random() * links.length)];
+            try {
+                const res = await axios.get(`https://new-api-five-eta.vercel.app/api/downloader/xnxx`, {
+                    params: {
+                        apikey: sex,
+                        url: randomLink
+                    },
+                    timeout: 20000
+                });
 
-        try {
-            const res = await axios.get(`https://new-api-five-eta.vercel.app/api/downloader/xnxx`, {
-                params: {
-                    apikey: sex,
-                    url: randomLink
-                },
-                timeout: 20000
-            });
+                const result = res.data.result;
+                if (!result || !result.download) continue;
 
-            const result = res.data.result;
-            if (!result || !result.download) continue;
+                const videoUrl = result.download.high_quality || result.download.low_quality;
+                const thumb = result.thumbnail;
+                const title = result.title || "Mm Videos 🤤";
 
-            const videoUrl = result.download.high_quality || result.download.low_quality;
-            const thumb = result.thumbnail;
-            const title = result.title || "Mm Videos 🤤";
-            await sock.sendMessage(chatId, {
-                video: { url: videoUrl },
-                caption: `🔥 *${title}*\n\n> 𝒁𝑶𝑹𝑶 𝑴𝑫`,
-                contextInfo: {
-                    externalAdReply: {
-                        title: "Get Up Little Cucumber 😄",
-                        body: "inside Me 🥵",
-                        thumbnailUrl: thumb,
-                        sourceUrl: "https://sabir7718.is-a.dev",
-                        mediaType: 1,
-                        renderLargerThumbnail: true
+                await sock.sendMessage(chatId, {
+                    video: { url: videoUrl },
+                    caption: `🔥 *${title}*\n\n> 𝒁𝑶𝑹𝑶 𝑴𝑫`,
+                    contextInfo: {
+                        externalAdReply: {
+                            title: "Get Up Little Cucumber 😄",
+                            body: "inside Me 🥵",
+                            thumbnailUrl: thumb,
+                            sourceUrl: "https://sabir7718.is-a.dev",
+                            mediaType: 1,
+                            renderLargerThumbnail: true
+                        }
                     }
-                }
-            }, { quoted: message });
+                }, { quoted: message });
 
-            success = true;
+                success = true;
 
-        } catch (e) {
-            console.log('❌ Attempt failed, trying another link...');
+            } catch (e) {
+                console.log(`❌ Attempt ${i + 1} failed, trying next...`);
+            }
         }
-    }
 
-    if (!success) {
-        await sock.sendMessage(chatId, {
-            text: "❌ All links failed or API is down, try later 😅"
-        }, { quoted: message });
-    }
+        if (!success) {
+            await sock.sendMessage(chatId, { text: "❌ All links failed or API is down." }, { quoted: message });
+        }
 
-} catch (err) {
-    console.error("PornVid Command Error:", err);
-    await sock.sendMessage(chatId, { text: "❌ Internal Error occurred!" }, { quoted: message });
-}
+    } catch (err) {
+        console.error("PornVid Command Error:", err);
+        await sock.sendMessage(chatId, { text: "❌ Internal Error occurred!" }, { quoted: message });
+    }
     break;
 }
+
 
 
 
