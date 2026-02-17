@@ -1,5 +1,34 @@
-//const API="http://localhost:8888";
 const API="https://proxyweb-pgev.onrender.com";
+
+async function getDeviceCode() {
+  const saved = localStorage.getItem("deviceCode");
+  if (saved && saved.length === 64) return saved;
+
+  const safe = v =>
+    v !== undefined && v !== null && v !== "" ? v : "0";
+
+  const parts = [
+    safe(navigator.userAgent),
+    safe(navigator.language),
+    safe(screen.width),
+    safe(screen.height),
+    safe(screen.colorDepth),
+    safe(navigator.hardwareConcurrency),
+    safe(navigator.deviceMemory),
+    safe(Intl.DateTimeFormat().resolvedOptions().timeZone),
+    safe(new Date().getTimezoneOffset())
+  ].join("|");
+
+  const encoded = new TextEncoder().encode(parts);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+
+  const dc = [...new Uint8Array(hashBuffer)]
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  localStorage.setItem("deviceCode", dc);
+  return dc;
+}
 
 let rs_user = localStorage.getItem("rs_user");
 let rs_key  = localStorage.getItem("rs_key");
@@ -21,7 +50,11 @@ async function verifyReseller(){
   const res = await fetch(`${API}/reseller/login`, {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ username, accessKey })
+    body: JSON.stringify({
+  username,
+  accessKey,
+  deviceCode: await getDeviceCode()
+})
   });
 
   const data = await res.json();
@@ -34,37 +67,58 @@ async function verifyReseller(){
 
 /* ------------ LOAD USERS ----------- */
 async function loadUsers(){
-  const res = await fetch(`${API}/admin/users`);
+  const res = await fetch(`${API}/reseller/users`,{
+  method:"POST",
+  headers:{ "Content-Type":"application/json" },
+  body:JSON.stringify({
+    username: rs_user,
+    accessKey: rs_key,
+    deviceCode: await getDeviceCode()
+  })
+});
   const users = await res.json();
   tbl.innerHTML = "";
 
   users.forEach(u=>{
-    const expiry = new Date(u.expiry).toLocaleDateString();
+  const expiry = new Date(u.expiry).toLocaleDateString();
 
-    // remove null/empty junk
-    const cleanDevices = (u.devicesUsed || []).filter(d => d && typeof d === "string");
+  const usedCount = (u.devicesUsed || []).length;
+  const limit = u.devicesAllowed === "unlimited"
+    ? "∞"
+    : u.devicesAllowed;
 
-    // shorten display
-    const devs = cleanDevices.length
-      ? cleanDevices.map(d => `<span title="${d}">${d.slice(0,8)}...${d.slice(-8)}</span>`).join("<br>")
-      : "—";
+  const platform = u.platform || "web"; // fallback safety
 
-    tbl.innerHTML += `
-      <tr>
-        <td>${u.username}</td>
-        <td>${u.accessKey}</td>
-        <td>${expiry}</td>
-        <td>${u.devicesAllowed}</td>
-        <td>${cleanDevices.length}</td>
-        <td style="font-size:12px">${devs}</td>
-        <td>
-          <button class="small" onclick="editUser('${u.username}')">Edit</button>
-          <button class="small danger" onclick="deleteUser('${u.username}')">Delete</button>
-          <button class="small" onclick="clearUser('${u.username}')">Clear</button>
-        </td>
-      </tr>
-    `;
-  });
+  const devs = usedCount
+    ? u.devicesUsed.map(d =>
+        `<span title="${d}">${d.slice(0,8)}...${d.slice(-8)}</span>`
+      ).join("<br>")
+    : "—";
+
+  tbl.innerHTML += `
+<tr>
+  <td>${u.username}</td>
+  <td>${u.accessKey}</td>
+  <td>${expiry}</td>
+  <td>${limit}/${usedCount}</td>
+  <td>${platform.toUpperCase()}</td>
+  <td style="font-size:12px">${devs}</td>
+  <td>
+    <button class="small"
+      onclick="editUser('${u.username}','${u.accessKey}')">
+      Edit
+    </button>
+    <button class="small danger"
+      onclick="deleteUser('${u.username}','${u.accessKey}')">
+      Delete
+    </button>
+    <button class="small"
+      onclick="clearUser('${u.username}','${u.accessKey}')">
+      Clear
+    </button>
+  </td>
+</tr>`;
+});
 }
 
 /* ------------ ADD USER ----------- */
@@ -79,59 +133,112 @@ async function addUser(){
 
   const finalExp=new Date(expiry+"T23:59:59Z").toISOString();
 
-  await fetch(`${API}/admin/add`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({username,accessKey,expiry:finalExp,devicesAllowed:allowed})
-  });
+  await fetch(`${API}/reseller/add`,{
+  method:"POST",
+  headers:{ "Content-Type":"application/json" },
+  body:JSON.stringify({
+    username: rs_user,
+    accessKey: rs_key,
+    deviceCode: await getDeviceCode(),
+    newUser: username,
+    newKey: accessKey,
+    expiry: finalExp,
+    devicesAllowed: allowed
+  })
+});
 
   await verifyReseller();
 loadUsers();
 }
 
 /* ------------ EDIT USER ----------- */
-async function editUser(username){
-  const newKey=prompt("New key?");
-  const newExp=prompt("New expiry (YYYY-MM-DD)?");
-  const newLimit=prompt("New limit? (number/unlimited)");
+async function editUser(targetUser, targetKey){
+  const newKey = prompt("New key?");
+  const newExp = prompt("New expiry (YYYY-MM-DD)?");
+  const newDeviceLimit = prompt("New limit? (number/unlimited)");
 
-  let expiry=newExp?new Date(newExp+"T23:59:59Z").toISOString():null;
+  const newExpiry = newExp
+    ? new Date(newExp + "T23:59:59Z").toISOString()
+    : null;
 
-  await fetch(`${API}/admin/edit`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({username,accessKey:newKey,expiry,devicesAllowed:newLimit})
+  const res = await fetch(`${API}/reseller/edit`, {
+    method: "POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify({
+      username: rs_user,
+      accessKey: rs_key,
+      deviceCode: await getDeviceCode(),
+
+      targetUser,
+      targetKey,
+      newKey,
+      newExpiry,
+      newDeviceLimit
+    })
   });
 
-  await verifyReseller();
-loadUsers();
+  const data = await res.json();
+
+  if(!res.ok){
+    return alert(data.message || "❌ Edit failed");
+  }
+
+  alert("✅ User updated");
+  loadUsers();
 }
 
 /* ------------ DELETE USER ----------- */
-async function deleteUser(username){
-  if(!confirm(`Delete ${username}?`))return;
+async function deleteUser(targetUser, targetKey){
+  if(!confirm(`Delete ${targetUser}?`)) return;
 
-  await fetch(`${API}/admin/delete`,{
+  const res = await fetch(`${API}/reseller/delete`, {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({username})
+    body: JSON.stringify({
+      username: rs_user,
+      accessKey: rs_key,
+      deviceCode: await getDeviceCode(),
+
+      targetUser,
+      targetKey
+    })
   });
-  await verifyReseller();
-loadUsers();
+
+  const data = await res.json();
+
+  if(!res.ok){
+    return alert(data.message || "❌ Delete failed");
+  }
+
+  alert("✅ User deleted");
+  loadUsers();
 }
 
 /* ------------ CLEAR USER (DEVICE IDs) ----------- */
-async function clearUser(username){
-  if(!confirm(`Clear devices for ${username}?`))return;
+async function clearUser(targetUser, targetKey){
+  if(!confirm(`Clear devices for ${targetUser}?`)) return;
 
-  await fetch(`${API}/admin/clear`,{
+  const res = await fetch(`${API}/reseller/clear`, {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({username})
+    body: JSON.stringify({
+      username: rs_user,
+      accessKey: rs_key,
+      deviceCode: await getDeviceCode(),
+
+      targetUser,
+      targetKey
+    })
   });
 
-  await verifyReseller();
-loadUsers();
+  const data = await res.json();
+
+  if(!res.ok){
+    return alert(data.message || "❌ Clear failed");
+  }
+
+  alert("✅ Devices cleared");
+  loadUsers();
 }
 
 /* ------------ LOGOUT ----------- */
