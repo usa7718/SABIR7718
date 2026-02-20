@@ -87,7 +87,7 @@ async function loadUsers(){
     ? "∞"
     : u.devicesAllowed;
 
-  const platform = u.platform || "web"; // fallback safety
+  const platform = u.platform || "both"; // fallback safety
 
   const devs = usedCount
     ? u.devicesUsed.map(d =>
