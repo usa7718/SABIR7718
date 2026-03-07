@@ -12,201 +12,344 @@
 
     :root {
       --neon: #00fff7;
-      --violet: #7c7cff;
-      --glass: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.14);
+      --violet: #b500ff;
+      --glass: rgba(20, 20, 30, 0.4);
+      --border: rgba(0, 255, 247, 0.2);
     }
 
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      margin: 0;
       min-height: 100vh;
       font-family: 'JetBrains Mono', monospace;
-      background: radial-gradient(circle at top, #0a0f2c, #000);
+      background-color: #050505;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #fff;
       overflow: hidden;
+      perspective: 1000px;
     }
 
-    /* Animated background glow */
-    body::before {
-      content: "";
+    /* --- Welcome Boot Screen --- */
+    #loader {
       position: fixed;
-      inset: -50%;
-      background:
-        radial-gradient(circle at 20% 30%, rgba(0,255,247,0.12), transparent 35%),
-        radial-gradient(circle at 80% 70%, rgba(124,124,255,0.12), transparent 35%);
-      animation: bgFloat 18s ease-in-out infinite alternate;
+      inset: 0;
+      background: #050505;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.8s ease, visibility 0.8s;
+    }
+
+    .terminal-loader {
+      font-size: 1.2em;
+      color: var(--neon);
+      text-shadow: 0 0 10px var(--neon);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .terminal-text::after {
+      content: '█';
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* --- Animated Cyber Grid Background --- */
+    .cyber-grid {
+      position: absolute;
+      bottom: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background-image: 
+        linear-gradient(rgba(0, 255, 247, 0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 247, 0.2) 1px, transparent 1px);
+      background-size: 40px 40px;
+      transform: rotateX(75deg);
+      transform-origin: center;
+      animation: moveGrid 10s linear infinite;
+      z-index: -2;
       pointer-events: none;
     }
 
-    @keyframes bgFloat {
-      from { transform: translateY(-40px); }
-      to   { transform: translateY(40px); }
+    .grid-fade {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, transparent 10%, #050505 70%);
+      z-index: -1;
+      pointer-events: none;
     }
 
-    /* Main card */
+    @keyframes moveGrid {
+      0% { transform: rotateX(75deg) translateY(0); }
+      100% { transform: rotateX(75deg) translateY(40px); }
+    }
+
+    /* Ambient background glowing orbs */
+    body::before, body::after {
+      content: "";
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: -1;
+      animation: orbFloat 10s ease-in-out infinite alternate;
+    }
+
+    body::before {
+      background: var(--neon);
+      top: 10%;
+      left: 20%;
+      opacity: 0.15;
+    }
+
+    body::after {
+      background: var(--violet);
+      bottom: 10%;
+      right: 20%;
+      opacity: 0.15;
+      animation-delay: -5s;
+    }
+
+    @keyframes orbFloat {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(50px, 50px) scale(1.5); }
+    }
+
+    /* --- Main Card --- */
     .container {
       width: 100%;
       max-width: 420px;
-      padding: 36px 28px;
-      border-radius: 22px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
-      backdrop-filter: blur(20px);
+      padding: 40px 30px;
+      border-radius: 24px;
+      background: var(--glass);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
       border: 1px solid var(--border);
-      box-shadow:
-        0 0 60px rgba(0,255,247,0.18),
-        inset 0 0 30px rgba(255,255,255,0.04);
+      box-shadow: 
+        0 20px 50px rgba(0,0,0,0.5),
+        inset 0 0 20px rgba(0, 255, 247, 0.05);
       position: relative;
-
-      animation:
-        enter 1s cubic-bezier(.22,1,.36,1),
-        floatCard 6s ease-in-out infinite;
-      will-change: transform;
+      transform-style: preserve-3d;
+      opacity: 0;
+      transform: translateY(50px) scale(0.9);
+      transition: transform 0.1s; /* For JS tilt */
     }
 
-    @keyframes enter {
-      from { opacity: 0; transform: translateY(40px) scale(0.96); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
+    .container.loaded {
+      animation: enterCard 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      animation-delay: 0.2s;
     }
 
-    @keyframes floatCard {
-      0%   { transform: translateY(0); }
-      50%  { transform: translateY(-10px); }
-      100% { transform: translateY(0); }
+    @keyframes enterCard {
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    /* Avatar */
+    /* Glowing animated border pseudo-element */
+    .container::before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: 26px;
+      background: linear-gradient(45deg, var(--neon), transparent, var(--violet), transparent);
+      z-index: -1;
+      background-size: 200% 200%;
+      animation: borderGlow 6s linear infinite;
+      opacity: 0.5;
+    }
+
+    @keyframes borderGlow {
+      0% { background-position: 0% 0%; }
+      50% { background-position: 100% 100%; }
+      100% { background-position: 0% 0%; }
+    }
+
+    /* --- Avatar --- */
     .avatar {
-      width: 120px;
-      height: 120px;
-      border-radius: 18px;
+      width: 130px;
+      height: 130px;
+      border-radius: 30%; /* Squircle shape */
       margin: 0 auto 20px;
       background-image: url("https://a.top4top.io/p_3448nqb7o0.jpeg");
       background-size: cover;
       background-position: center;
-      border: 1px solid var(--border);
-      box-shadow: 0 0 30px rgba(0,255,247,0.6);
-      animation: breathe 4.5s ease-in-out infinite;
-      transition: transform 0.5s cubic-bezier(.22,1,.36,1);
+      border: 2px solid var(--neon);
+      box-shadow: 
+        0 0 20px rgba(0,255,247,0.4),
+        inset 0 0 20px rgba(0,255,247,0.4);
+      animation: breathe 3s ease-in-out infinite;
+      transform: translateZ(30px); /* 3D pop out */
+      transition: all 0.4s ease;
     }
 
-    .avatar:hover {
-      transform: scale(1.08) rotate(1deg);
+    .container:hover .avatar {
+      border-radius: 50%;
+      box-shadow: 0 0 40px var(--neon);
     }
 
     @keyframes breathe {
-      0%,100% { box-shadow: 0 0 28px rgba(0,255,247,0.45); }
-      50%     { box-shadow: 0 0 45px rgba(0,255,247,0.8); }
+      0%, 100% { filter: drop-shadow(0 0 10px rgba(0,255,247,0.5)); }
+      50% { filter: drop-shadow(0 0 25px rgba(0,255,247,0.9)); }
     }
 
+    /* --- Typography --- */
     h1 {
       text-align: center;
       margin: 0;
-      font-size: 1.7em;
-      letter-spacing: 1px;
+      font-size: 1.8em;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      transform: translateZ(20px);
     }
 
     h1 span {
-      color: var(--neon);
+      background: linear-gradient(to right, var(--neon), var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+    }
+
+    /* Glitch effect on hover */
+    h1:hover {
+      animation: glitch 0.2s linear infinite;
+    }
+
+    @keyframes glitch {
+      0% { text-shadow: 2px 0 var(--neon), -2px 0 var(--violet); }
+      50% { text-shadow: -2px 0 var(--neon), 2px 0 var(--violet); }
+      100% { text-shadow: 2px 0 var(--neon), -2px 0 var(--violet); }
     }
 
     .tagline {
       text-align: center;
-      font-size: 0.85em;
-      color: #aaa;
+      font-size: 0.9em;
+      color: #00fff7;
       margin: 10px 0 28px;
-      animation: fadeUp 1.2s ease both;
+      text-shadow: 0 0 8px rgba(0,255,247,0.5);
+      transform: translateZ(15px);
+      display: inline-block;
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 2px solid var(--neon);
+      animation: typing 2.5s steps(30, end) forwards, blink 0.75s step-end infinite;
+    }
+
+    @keyframes typing {
+      from { max-width: 0; }
+      to { max-width: 100%; border-color: transparent; }
     }
 
     .about {
       font-size: 0.9em;
-      line-height: 1.7;
-      background: var(--glass);
-      padding: 18px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
+      line-height: 1.6;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 20px;
+      border-radius: 12px;
+      border-left: 3px solid var(--neon);
       margin-bottom: 28px;
-      animation: fadeUp 1.4s ease both;
+      transform: translateZ(10px);
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
     }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .about b {
+      color: var(--neon);
     }
 
-    /* Social icons */
+    /* --- Social Icons --- */
     .socials {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
+      gap: 15px;
+      transform: translateZ(25px);
     }
 
     .socials a {
-      height: 52px;
+      height: 55px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5em;
-      color: #ccc;
-      background: rgba(255,255,255,0.05);
+      font-size: 1.6em;
+      color: #fff;
+      background: rgba(255,255,255,0.03);
       border-radius: 14px;
-      border: 1px solid var(--border);
-      transition: 
-        transform 0.35s cubic-bezier(.22,1,.36,1),
-        box-shadow 0.35s ease,
-        color 0.35s ease;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       position: relative;
       overflow: hidden;
+      z-index: 1;
     }
 
     .socials a::before {
       content: "";
       position: absolute;
-      inset: -100%;
-      background: linear-gradient(120deg, transparent, rgba(0,255,247,0.35), transparent);
-      transition: 0.6s ease;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--neon);
+      transition: all 0.3s ease;
+      z-index: -1;
     }
 
     .socials a:hover::before {
-      inset: 100%;
+      top: 0;
     }
 
     .socials a:hover {
-      color: var(--neon);
-      transform: translateY(-6px) scale(1.05);
-      box-shadow: 0 0 22px rgba(0,255,247,0.7);
+      color: #000;
+      transform: translateY(-8px) scale(1.1);
+      box-shadow: 0 10px 20px rgba(0,255,247,0.5);
+      border-color: var(--neon);
     }
 
     footer {
       margin-top: 30px;
       text-align: center;
       font-size: 0.75em;
-      color: #888;
-      animation: fadeUp 1.6s ease both;
+      color: rgba(255,255,255,0.4);
+      transform: translateZ(5px);
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .container { max-width: 90%; padding: 30px 20px; }
+      .avatar { width: 100px; height: 100px; }
+      h1 { font-size: 1.5em; }
     }
   </style>
 </head>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2408258172384315"
-     crossorigin="anonymous"></script>
-
 <body>
 
-  <div class="container">
+  <div id="loader">
+    <div class="terminal-loader">
+      <span class="terminal-text" id="typewriter"></span>
+    </div>
+  </div>
+
+  <div class="cyber-grid"></div>
+  <div class="grid-fade"></div>
+
+  <div class="container" id="card">
     <div class="avatar"></div>
 
-    <h1>S7 <span>// Developer</span></h1>
+    <h1>S7 <span>// Dev</span></h1>
     <div class="tagline">UI · UX · Security · Automation</div>
 
     <div class="about">
-      I design sleek interfaces, build secure applications, and automate workflows using Python.
-      <br><br>
-      Currently focused on bug bounty research — XSS, SQLi, and modern web exploitation.
+      I design sleek interfaces, build secure applications, and automate workflows using <b>Python</b>.<br><br>
+      Currently focused on bug bounty research — <b>XSS, SQLi</b>, and modern web exploitation.
     </div>
 
     <div class="socials">
@@ -218,6 +361,63 @@
 
     <footer>© 2025 SABIR7718 · Smooth as Butter</footer>
   </div>
+
+  <script>
+    // --- 1. Welcome Boot Screen Sequence ---
+    const textElement = document.getElementById('typewriter');
+    const texts = ["> INITIALIZING S7 PROTOCOLS...", "> DECRYPTING DATA...", "> ACCESS GRANTED."];
+    let textIndex = 0;
+    let charIndex = 0;
+
+    function typeWriter() {
+      if (textIndex < texts.length) {
+        if (charIndex < texts[textIndex].length) {
+          textElement.innerHTML += texts[textIndex].charAt(charIndex);
+          charIndex++;
+          setTimeout(typeWriter, 50); // Typing speed
+        } else {
+          setTimeout(() => {
+            textElement.innerHTML = '';
+            charIndex = 0;
+            textIndex++;
+            typeWriter();
+          }, 600); // Pause between lines
+        }
+      } else {
+        // Remove loader and show card
+        setTimeout(() => {
+          document.getElementById('loader').style.opacity = '0';
+          document.getElementById('loader').style.visibility = 'hidden';
+          document.getElementById('card').classList.add('loaded');
+        }, 300);
+      }
+    }
+    
+    // Start typing on load
+    window.onload = () => {
+      setTimeout(typeWriter, 500);
+    };
+
+    // --- 2. Interactive 3D Card Tilt (Vanilla JS) ---
+    const card = document.getElementById('card');
+    
+    document.addEventListener('mousemove', (e) => {
+      // Only apply tilt if the card is loaded
+      if(!card.classList.contains('loaded')) return;
+
+      let xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+      let yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+      
+      card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+    });
+
+    // Reset tilt when mouse leaves
+    document.addEventListener('mouseleave', () => {
+      card.style.transform = `rotateY(0deg) rotateX(0deg)`;
+      card.style.transition = 'transform 0.5s ease';
+      setTimeout(() => { card.style.transition = 'transform 0.1s'; }, 500);
+    });
+  </script>
 
 </body>
 </html>
